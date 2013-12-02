@@ -95,6 +95,12 @@
         <version>2.2.1</version>
     </dependency>
 
+    <dependency>
+        <groupId>org.scalatra</groupId>
+        <artifactId>scalatra-json_2.10</artifactId>
+        <version>2.2.1</version>
+    </dependency>
+
     <!-- Servlet API -->
 
     <dependency>
@@ -119,13 +125,19 @@
         <scope>compile</scope>
     </dependency>
 
-    <!-- LogBack -->
+    <!-- Other -->
 
     <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>1.0.13</version>
         <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.json4s</groupId>
+        <artifactId>json4s-jackson_2.10</artifactId>
+        <version>3.2.4</version>
     </dependency>
 
     <!-- ProvToolbox -->

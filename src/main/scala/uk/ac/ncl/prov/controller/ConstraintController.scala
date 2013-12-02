@@ -1,14 +1,21 @@
 package uk.ac.ncl.prov.controller
 
-import org.scalatra._
+class ConstraintController extends Controller {
 
-/**
- * Created with IntelliJ IDEA.
- * User: hugofirth
- * Date: 02/12/2013
- * Time: 13:38
- * To change this template use File | Settings | File Templates.
- */
-class ConstraintController extends ScalatraServlet {
+  get("/") {
+    Constraints.all
+  }
 
+}
+
+//Dumby Model
+case class Constraint(slug: String, name: String)
+
+//Dumby Data
+object Constraints {
+  val all = List (
+      Constraint("con-1", "First Constraint"),
+      Constraint("con-2", "Second Constraint"),
+      Constraint("con-3", "Third Constraint")
+  )
 }
