@@ -1,0 +1,274 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>uk.ac.ncl.prov</groupId>
+  <artifactId>prov-gen</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>${project.artifactId}</name>
+  <description>Generates large, synthetic, PROV-O graphs from seed graphs.</description>
+  <inceptionYear>2013</inceptionYear>
+
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>http://opensource.org/licenses/MIT</url>
+      <distribution>https://github.com/hugofirth/prov-gen</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+        <id>hugofirth</id>
+        <name>Hugo Firth</name>
+        <email>h.firth@ncl.ac.uk</email>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:hugofirth/prov-gen.git</connection>
+    <url>scm:git:git@github.com:hugofirth/prov-gen.git</url>
+    <developerConnection>scm:git:git@github.com:hugofirth/prov-gen.git</developerConnection>
+  </scm>
+
+  <properties>
+
+    <encoding>UTF-8</encoding>
+    <scala.version>2.10.1</scala.version>
+    <scalatra.version>2.2.0</scalatra.version>
+    <jetty.version>9.0.2.v20130417</jetty.version>
+  </properties>
+
+  <packaging>war</packaging>
+
+  <repositories>
+      <repository>
+          <id>mvn.prov.toolbox</id>
+          <name>maven repository for PROV toolbox</name>
+          <url>http://openprovenance.org/java/maven-releases/</url>
+      </repository>
+    <repository>
+        <id>scala-tools.org</id>
+        <name>Scala-Tools Maven2 Repository</name>
+        <url>http://scala-tools.org/repo-releases</url>
+    </repository>
+    <repository>
+        <id>maven2-repository.dev.java.net</id>
+        <name>Java.net Maven 2 Repository</name>
+        <url>http://download.java.net/maven/2</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+        <id>scala-tools.org</id>
+        <name>Scala-Tools Maven2 Repository</name>
+        <url>http://scala-tools.org/repo-releases</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <dependencies>
+
+    <!-- Scala -->
+
+    <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>${scala.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-reflect</artifactId>
+        <version>${scala.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-compiler</artifactId>
+        <version>${scala.version}</version>
+    </dependency>
+
+    <!-- Scalatra -->
+
+    <dependency>
+        <groupId>org.scalatra</groupId>
+        <artifactId>scalatra_2.10</artifactId>
+        <version>2.2.1</version>
+    </dependency>
+
+    <!-- Servlet API -->
+
+    <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>3.0.1</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <!-- Jetty -->
+
+    <dependency>
+        <groupId>org.eclipse.jetty.orbit</groupId>
+        <artifactId>javax.servlet</artifactId>
+        <version>3.0.0.v201112011016</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-webapp</artifactId>
+        <version>9.0.4.v20130625</version>
+        <scope>compile</scope>
+    </dependency>
+
+    <!-- LogBack -->
+
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.0.13</version>
+        <scope>runtime</scope>
+    </dependency>
+
+    <!-- ProvToolbox -->
+
+    <!-- <dependency>
+        <groupId>org.openprovenance.prov</groupId>
+        <artifactId>ProvToolbox</artifactId>
+        <version>0.4.0</version>
+    </dependency>  -->
+
+    <!-- Test -->
+
+    <dependency>
+        <!-- A workaround for http://youtrack.jetbrains.com/issue/SCL-4865 IntelliJ IDEA bug-->
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-actors</artifactId>
+        <version>${scala.version}</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.8.1</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.scalatra</groupId>
+        <artifactId>scalatra-scalatest_2.10</artifactId>
+        <version>2.2.1</version>
+        <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+
+    <plugins>
+
+        <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>3.1.6</version>
+            <configuration>
+                <recompileMode>incremental</recompileMode>
+                <useZincServer>true</useZincServer>
+                <ccTestGoals>scalatest:test</ccTestGoals>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>scala-compile-first</id>
+                    <phase>process-resources</phase>
+                    <goals>
+                        <goal>add-source</goal>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>scala-test-compile</id>
+                    <phase>process-test-resources</phase>
+                    <goals>
+                        <goal>testCompile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.12</version>
+            <configuration>
+                <includes>
+                    <include>**/*Suite.class</include>
+                    <include>**/*Test.class</include>
+                    <include>**/*Tests.class</include>
+                    <include>**/*Spec.class</include>
+                    <include>**/*Specs.class</include>
+                </includes>
+                <forkMode>once</forkMode>
+                <useFile>false</useFile>
+            </configuration>
+        </plugin>
+
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.1.2</version>
+            <executions>
+                <execution>
+                    <id>attach-sources</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>jar-no-fork</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.4</version>
+            <executions>
+                <execution>
+                    <id>sign-artifacts</id>
+                    <goals>
+                        <goal>sign</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <useAgent>true</useAgent>
+            </configuration>
+        </plugin>
+
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.1</version>
+            <configuration>
+                <source>1.7</source>
+                <target>1.7</target>
+            </configuration>
+            <executions>
+                <execution>
+                    <phase>compile</phase>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+        <plugin>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-maven-plugin</artifactId>
+            <version>${jetty.version}</version>
+        </plugin>
+
+    </plugins>
+
+  </build>
+
+</project>
