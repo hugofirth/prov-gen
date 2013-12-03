@@ -9,8 +9,8 @@
 
   <licenses>
     <license>
-      <name>MIT</name>
-      <url>http://opensource.org/licenses/MIT</url>
+      <name>GPLv3</name>
+      <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
       <distribution>https://github.com/hugofirth/prov-gen</distribution>
     </license>
   </licenses>
@@ -125,6 +125,23 @@
         <scope>compile</scope>
     </dependency>
 
+
+    <!-- Neo4j -->
+
+    <dependency>
+        <groupId>org.neo4j</groupId>
+        <artifactId>neo4j</artifactId>
+        <version>1.9.5</version>
+    </dependency>
+
+    <!-- ProvToolbox -->
+
+    <!-- <dependency>
+        <groupId>org.openprovenance.prov</groupId>
+        <artifactId>ProvToolbox</artifactId>
+        <version>0.4.0</version>
+    </dependency>  -->
+
     <!-- Other -->
 
     <dependency>
@@ -139,14 +156,6 @@
         <artifactId>json4s-jackson_2.10</artifactId>
         <version>3.2.4</version>
     </dependency>
-
-    <!-- ProvToolbox -->
-
-    <!-- <dependency>
-        <groupId>org.openprovenance.prov</groupId>
-        <artifactId>ProvToolbox</artifactId>
-        <version>0.4.0</version>
-    </dependency>  -->
 
     <!-- Test -->
 
