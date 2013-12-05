@@ -14,8 +14,10 @@ class Constraint(val determiner: Determiner, val imperative: Imperative, val con
 
 }
 
-sealed abstract class Requirement {}
-//TODO: Worlk out how to actually structure the requirements. Own class or object ?
+case class Requirement()
+//TODO: Worlk out how to actually structure the requirements. Own class or object ? Should include the check removed from condition
 case class Determiner(provType: Type, invariable: Boolean = false, identifier: String = "")
-case class Imperative(necessary: Boolean, requirement: Requirement)
-case class Condition[T](check: (T) => Boolean)
+case class Imperative(requirement: Requirement, necessary: Boolean = true)
+case class Condition(requirement: Requirement, exception: Boolean = true)
+
+//E.G. an(Agent).must(have().relationship(WasGeneratedBy).atLeastOnce()).unless(it().has().relationship(ActedOnBehalfOf))
