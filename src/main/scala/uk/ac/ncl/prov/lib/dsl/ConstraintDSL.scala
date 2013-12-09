@@ -33,14 +33,14 @@ object ConstraintDSL extends StandardTokenParsers {
 
 
     //Get the imperative statement and its requirement function
-    def imperative: Parser[Imperative] = ("."~>("may"|"must") ~ ("(" ~> imperativeRequirement <~ ")"))^^{
+    def imperative: Parser[Imperative] = ("."~>("may"|"must") ~ ("(" ~> requirement <~ ")"))^^{
       case "may"~r => new Imperative(r, false)
       case "must"~r => new Imperative(r)
     }
 
 
     //Get the condition statement and its check function
-    def condition: Parser[Condition] = ("."~>("unless"|"when") ~ ("(" ~> conditionRequirement <~ ")"))^^{
+    def condition: Parser[Condition] = ("."~>("unless"|"when") ~ ("(" ~> requirement <~ ")"))^^{
       case "when"~r => new Condition(r, false)
       case "unless"~r => new Condition(r)
     }
@@ -48,7 +48,8 @@ object ConstraintDSL extends StandardTokenParsers {
     //TODO: Create requirement object structure and syntax
 
     //Get the requirements (for imperative and condition checks)
-
-    def imperativeRequirement: Parser[Requirement]
-    def conditionRequirement: Parser[Requirement]
+    //("have" | "it" ~ "." ~ "has") ~> "(" ~> ident <~ ")"^^
+    def requirement: Parser[Requirement] = stringLit^^{
+      case s => new Requirement(s)
+    }
 }

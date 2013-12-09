@@ -14,9 +14,9 @@ class Constraint(val determiner: Determiner, val imperative: Imperative, val con
 
 }
 
-case class Requirement()
+case class Requirement(requirement: String)
 //TODO: Worlk out how to actually structure the requirements. Own class or object ? Should include the check removed from condition
-case class Determiner(provType: Type, invariable: Boolean = false, identifier: String = "")
+case class Determiner(provType: Type, invariable: Boolean = false, identifier: String = null)
 case class Imperative(requirement: Requirement, necessary: Boolean = true)
 case class Condition(requirement: Requirement, exception: Boolean = true)
 
