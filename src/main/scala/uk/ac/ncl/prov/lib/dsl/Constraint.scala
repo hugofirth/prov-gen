@@ -1,6 +1,9 @@
 package uk.ac.ncl.prov.lib.dsl
 
-import PROV._, Type._, Relation._
+import prov._, degree._
+
+
+
 /**
  * Created with IntelliJ IDEA.
  * User: hugofirth
@@ -14,10 +17,10 @@ class Constraint(val determiner: Determiner, val imperative: Imperative, val con
 
 }
 
-case class Requirement(requirement: String)
 //TODO: Worlk out how to actually structure the requirements. Own class or object ? Should include the check removed from condition
+case class Requirement()
+case class DegreeRequirement(degree: Int = null, preposition: Preposition = Preposition.TOTAL) extends Requirement
+case class RelationshipRequirement(relation: Relation) extends Requirement
 case class Determiner(provType: Type, invariable: Boolean = false, identifier: String = null)
 case class Imperative(requirement: Requirement, necessary: Boolean = true)
 case class Condition(requirement: Requirement, exception: Boolean = true)
-
-//E.G. an(Agent).must(have().relationship(WasGeneratedBy).atLeastOnce()).unless(it().has().relationship(ActedOnBehalfOf))
