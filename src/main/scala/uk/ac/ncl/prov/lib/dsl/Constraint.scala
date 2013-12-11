@@ -24,8 +24,8 @@ class Requirement() {
   def between(min: Int, max: Int): Requirement = { this }
   def exactly(n: Int): Requirement = { this }
 }
-case class DegreeRequirement(degree: Int = null, preposition: Preposition = Preposition.TOTAL) extends Requirement
+case class DegreeRequirement(degree: Int = 0, preposition: Preposition = Preposition.TOTAL) extends Requirement
 case class RelationshipRequirement(relation: Relation) extends Requirement
-case class Determiner(provType: Type, invariable: Boolean = false, identifier: String = null)
+case class Determiner(provType: Type, invariable: Boolean = false, identifier: String = "")
 case class Imperative(requirement: Requirement, necessary: Boolean = true)
 case class Condition(requirement: Requirement, exception: Boolean = true)

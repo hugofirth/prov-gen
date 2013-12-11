@@ -67,13 +67,13 @@ object ConstraintDSL extends StandardTokenParsers {
       (("relationship" ~> "(" ~> ident <~ ")")^^{
         case r => RelationshipRequirement(Relation.withName(r))
       }) |
-      ((opt(("in" | "out")~".")~("degree"<~"(")~opt(numericLit)<~")")^^{
-        case "in"~"."~"degree"~n => DegreeRequirement(n.get.toInt, Preposition.IN)
-        case "out"~"."~"degree"~n => DegreeRequirement(n.get.toInt, Preposition.OUT)
-        case "degree"~n => DegreeRequirement(n.get.toInt)
-        case "in"~"."~"degree" => DegreeRequirement(preposition = Preposition.IN)
-        case "out"~"."~"degree" => DegreeRequirement(preposition = Preposition.OUT)
-        case "degree" => DegreeRequirement()
+      ((opt(("in" | "out")<~".")~("degree"<~"(")~opt(numericLit)<~")")^^{
+        case Some("in")~"degree"~Some(n) => DegreeRequirement(n.toInt, Preposition.IN)
+        case Some("out")~"degree"~Some(n) => DegreeRequirement(n.toInt, Preposition.OUT)
+        case None~"degree"~Some(n) => DegreeRequirement(n.toInt)
+        case Some("in")~"degree"~None => DegreeRequirement(preposition = Preposition.IN)
+        case Some("out")~"degree"~None => DegreeRequirement(preposition = Preposition.OUT)
+        case None~"degree"~None => DegreeRequirement()
       })
 
 
