@@ -17,8 +17,13 @@ class Constraint(val determiner: Determiner, val imperative: Imperative, val con
 
 }
 
-//TODO: Worlk out how to actually structure the requirements. Own class or object ? Should include the check removed from condition
-case class Requirement()
+//TODO: Fill out Class and Method stubs for all below - placing in their own source files.
+class Requirement() {
+  def atMost(max: Int): Requirement = { this }
+  def atLeast(min: Int): Requirement = { this }
+  def between(min: Int, max: Int): Requirement = { this }
+  def exactly(n: Int): Requirement = { this }
+}
 case class DegreeRequirement(degree: Int = null, preposition: Preposition = Preposition.TOTAL) extends Requirement
 case class RelationshipRequirement(relation: Relation) extends Requirement
 case class Determiner(provType: Type, invariable: Boolean = false, identifier: String = null)

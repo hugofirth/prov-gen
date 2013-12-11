@@ -11,7 +11,7 @@ class ConstraintSuite extends FunSuite with ShouldMatchers{
 
   test("a non-valid constraint string should throw an exception when parsed") {
     evaluating { ConstraintDSL.parseDSL("foo bar baz biz") } should produce [Exception]
-    evaluating { ConstraintDSL.parseDSL("an(Agent).when('requirement').unless('requirement')") } should produce [Exception]
+    evaluating { ConstraintDSL.parseDSL("an(Agent).when(it.has(relationship(ActedOnBehalfOf).exactly(1)).unless(have(in.degree().at.most(3)))") } should produce [Exception]
     evaluating { ConstraintDSL.parseDSL("an(Entity).unless('requirement').may('requirement')") } should produce [Exception]
   }
 

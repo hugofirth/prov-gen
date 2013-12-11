@@ -12,7 +12,7 @@ object ConstraintDSL extends StandardTokenParsers {
       "an", "a", "the", "must", "may", "have",
       "has", "be", "when", "unless", "it",
       "degree", "in", "out", "relationship",
-      "at", "most", "least", "between"
+      "at", "most", "least", "between", "exactly"
     )
 
     //Method to take in a DSL string and parse it
@@ -50,11 +50,16 @@ object ConstraintDSL extends StandardTokenParsers {
       case "unless"~r => Condition(r)
     }
 
-    //TODO: Create requirement object structure and syntax
 
     //Get the requirements (for imperative and condition checks)
     def requirement: Parser[Requirement] = (("have" | "it" ~ "." ~ "has") ~> "(" ~> required_feature <~ ")")>>{
-      feature => ("."~>(("at"~"."~("most" | "least")) | "between") ~> "(" ~> numericLit <~ ")")^^{ /* TODO: Do something here */ }
+      feature => (("."~>(("at"~>"."~>("most" | "least")) | "exactly") ~ ("(" ~> numericLit <~ ")"))^^{
+        case "most"~n => feature.atMost(n.toInt)
+        case "least"~n => feature.atLeast(n.toInt)
+        case "exactly"~n => feature.exactly(n.toInt)
+      }) | (("."~>"between"~>"("~>numericLit~","~numericLit<~")")^^{
+        case min~","~max => feature.between(min.toInt, max.toInt)
+      })
     }
 
 
