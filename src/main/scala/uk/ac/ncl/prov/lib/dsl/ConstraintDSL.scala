@@ -52,28 +52,27 @@ object ConstraintDSL extends StandardTokenParsers {
 
 
     //Get the requirements (for imperative and condition checks)
-    def requirement: Parser[Requirement] = (("have" | "it" ~ "." ~ "has") ~> "(" ~> required_feature <~ ")")>>{
-      feature => (("."~>(("at"~>"."~>("most" | "least")) | "exactly") ~ ("(" ~> numericLit <~ ")"))^^{
-        case "most"~n => feature.atMost(n.toInt)
-        case "least"~n => feature.atLeast(n.toInt)
-        case "exactly"~n => feature.exactly(n.toInt)
+    def requirement: Parser[Requirement] = (("have" | "it" ~ "." ~ "has") ~> "(" ~> requirement_feature)>>{
+      feature => (("."~>(("at"~>"."~>("most" | "least")) | "exactly") ~ ("(" ~> numericLit <~ ")")<~")")^^{
+        case "most"~n => feature.atMost(n.toInt); feature
+        case "least"~n => feature.atLeast(n.toInt); feature
+        case "exactly"~n => feature.exactly(n.toInt); feature
       }) | (("."~>"between"~>"("~>numericLit~","~numericLit<~")")^^{
-        case min~","~max => feature.between(min.toInt, max.toInt)
+        case min~","~max => feature.between(min.toInt, max.toInt); feature
       })
     }
 
-
-    def required_feature: Parser[Requirement] =
+    def requirement_feature: Parser[Requirement] =
       (("relationship" ~> "(" ~> ident <~ ")")^^{
-        case r => RelationshipRequirement(Relation.withName(r))
+        case r => new RelationshipRequirement(Relation.withName(r))
       }) |
       ((opt(("in" | "out")<~".")~("degree"<~"(")~opt(numericLit)<~")")^^{
-        case Some("in")~"degree"~Some(n) => DegreeRequirement(n.toInt, Preposition.IN)
-        case Some("out")~"degree"~Some(n) => DegreeRequirement(n.toInt, Preposition.OUT)
-        case None~"degree"~Some(n) => DegreeRequirement(n.toInt)
-        case Some("in")~"degree"~None => DegreeRequirement(preposition = Preposition.IN)
-        case Some("out")~"degree"~None => DegreeRequirement(preposition = Preposition.OUT)
-        case None~"degree"~None => DegreeRequirement()
+        case Some("in")~"degree"~Some(n) => new DegreeRequirement(n.toInt, Preposition.IN)
+        case Some("out")~"degree"~Some(n) => new DegreeRequirement(n.toInt, Preposition.OUT)
+        case None~"degree"~Some(n) => new DegreeRequirement(n.toInt)
+        case Some("in")~"degree"~None => new DegreeRequirement(preposition = Preposition.IN)
+        case Some("out")~"degree"~None => new DegreeRequirement(preposition = Preposition.OUT)
+        case None~"degree"~None => new DegreeRequirement()
       })
 
 
