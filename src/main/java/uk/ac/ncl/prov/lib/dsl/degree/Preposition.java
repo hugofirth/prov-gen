@@ -9,9 +9,9 @@ package uk.ac.ncl.prov.lib.dsl.degree;
  */
 public enum Preposition {
 
-    IN("In"),
-    OUT("agent"),
-    TOTAL("activity");
+    IN("in"),
+    OUT("out"),
+    TOTAL("total");
 
     private final String assoc;
 

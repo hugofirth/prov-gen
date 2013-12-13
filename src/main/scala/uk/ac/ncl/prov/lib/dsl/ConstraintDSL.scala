@@ -54,11 +54,11 @@ object ConstraintDSL extends StandardTokenParsers {
     //Get the requirements (for imperative and condition checks)
     def requirement: Parser[Requirement] = (("have" | "it" ~ "." ~ "has") ~> "(" ~> requirement_feature)>>{
       feature => (("."~>(("at"~>"."~>("most" | "least")) | "exactly") ~ ("(" ~> numericLit <~ ")")<~")")^^{
-        case "most"~n => feature.atMost(n.toInt); feature
-        case "least"~n => feature.atLeast(n.toInt); feature
-        case "exactly"~n => feature.exactly(n.toInt); feature
+        case "most"~n => feature.most = n.toInt; feature
+        case "least"~n => feature.least = n.toInt; feature
+        case "exactly"~n => feature.exact = n.toInt; feature
       }) | (("."~>"between"~>"("~>numericLit~","~numericLit<~")")^^{
-        case min~","~max => feature.between(min.toInt, max.toInt); feature
+        case min~","~max => feature.range = (min.toInt, max.toInt); feature
       })
     }
 

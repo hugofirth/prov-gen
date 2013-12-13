@@ -9,9 +9,9 @@ package uk.ac.ncl.prov.lib.dsl.prov;
  */
 public enum Type {
 
-    ENTITY("entity"),
-    AGENT("agent"),
-    ACTIVITY("activity");
+    ENTITY("Entity"),
+    AGENT("Agent"),
+    ACTIVITY("Activity");
 
     private final String assoc;
 
