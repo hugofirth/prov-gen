@@ -11,6 +11,7 @@ import prov._, degree._
  */
 
 //TODO: Reafactor and improve very brittle implementation of operators, should be ok because of Cypher dynamic params, but still not ideal ...
+
 abstract class Requirement {
 
   private var max: Int = 0

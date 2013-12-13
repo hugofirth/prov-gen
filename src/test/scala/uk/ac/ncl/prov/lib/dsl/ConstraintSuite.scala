@@ -34,9 +34,17 @@ class ConstraintSuite extends FunSuite with ShouldMatchers{
     result.imperative.necessary should equal(false)
     result.imperative.requirement.isInstanceOf[RelationshipRequirement] should equal(true)
     result.imperative.requirement.asInstanceOf[RelationshipRequirement].relation should equal(Relation.WASGENERATEDBY)
+    result.imperative.requirement.toCypherQL should equal("(n)-[:WasGeneratedBy]-()")
   }
 
   //Test Condition
+  test("a valid constraint string should correctly parse and determine a condition") {
+    val result = ConstraintDSL.parseDSL("the(Entity, e1).may(have(relationship(WasGeneratedBy).at.least(1))).when(it.has(in.degree().at.most(1)))")
+    result.condition.exception should equal(false)
+    result.condition.requirement.isInstanceOf[DegreeRequirement] should equal(true)
+    result.condition.requirement.asInstanceOf[DegreeRequirement].preposition should equal(Preposition.IN)
+    result.condition.requirement.toCypherQL should equal("n.inDegree <=1")
+  }
 
 
 
