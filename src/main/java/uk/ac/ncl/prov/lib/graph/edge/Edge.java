@@ -1,4 +1,4 @@
-package uk.ac.ncl.prov.lib.graph.relationship;
+package uk.ac.ncl.prov.lib.graph.edge;
 
 import uk.ac.ncl.prov.lib.graph.Element;
 import uk.ac.ncl.prov.lib.graph.vertex.Vertex;
@@ -8,7 +8,7 @@ import java.util.Arrays;
 /**
  * Created by hugofirth on 13/03/2014.
  */
-public class Relationship extends Element {
+public class Edge extends Element {
 
     private final Orientation orientation;
     private final Vertex[] connecting;
@@ -18,7 +18,7 @@ public class Relationship extends Element {
         UNDIRECTED;
     }
 
-    public Relationship(Builder builder)
+    public Edge(Builder builder)
     {
         super(builder);
         this.orientation = builder.orientation;
@@ -94,9 +94,9 @@ public class Relationship extends Element {
             return this;
         }
 
-        public Relationship build()
+        public Edge build()
         {
-            return new Relationship(this);
+            return new Edge(this);
         }
     }
 }

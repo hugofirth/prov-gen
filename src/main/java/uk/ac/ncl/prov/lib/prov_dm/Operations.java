@@ -16,10 +16,6 @@ public final class Operations {
     static {
         List<Query> temp = new LinkedList<>();
 
-        Vertex e = new Vertex(Type.ENTITY);
-        Vertex a = new Vertex(Type.ACTIVITY);
-        Vertex ag = new Vertex(Type.AGENT);
-
 
         /*
          * TODO: Eventually get to the below
