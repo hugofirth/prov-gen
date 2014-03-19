@@ -1,4 +1,6 @@
-package uk.ac.ncl.prov.lib.dsl.prov;
+package uk.ac.ncl.prov.lib.prov_dm;
+
+import uk.ac.ncl.prov.lib.graph.vertex.VertexLabel;
 
 /**
  * Created with IntelliJ IDEA.
@@ -7,7 +9,7 @@ package uk.ac.ncl.prov.lib.dsl.prov;
  * Time: 14:47
  * To change this template use File | Settings | File Templates.
  */
-public enum Type {
+public enum Type implements VertexLabel {
 
     ENTITY("Entity"),
     AGENT("Agent"),

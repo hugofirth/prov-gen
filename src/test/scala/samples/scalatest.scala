@@ -86,7 +86,7 @@ A Map
 */
 import org.scalatest.FunSpec
 import org.scalatest.matchers.MustMatchers
-
+@RunWith(classOf[JUnitRunner])
 class MapSpec extends FunSpec with MustMatchers {
 
   describe("A Map") {

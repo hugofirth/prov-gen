@@ -1,4 +1,6 @@
-package uk.ac.ncl.prov.lib.dsl.prov;
+package uk.ac.ncl.prov.lib.prov_dm;
+
+import uk.ac.ncl.prov.lib.graph.edge.EdgeLabel;
 
 /**
  * Created with IntelliJ IDEA.
@@ -7,8 +9,7 @@ package uk.ac.ncl.prov.lib.dsl.prov;
  * Time: 14:47
  * To change this template use File | Settings | File Templates.
  */
-public enum Relation {
-
+public enum Relation implements EdgeLabel {
     WASGENERATEDBY("WasGeneratedBy"),
     USED("Used"),
     WASINFORMEDBY("WasInformedBy"),
