@@ -1,29 +1,26 @@
 package uk.ac.ncl.prov.lib.graph;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by hugofirth on 09/03/2014.
  */
 public abstract class Element implements Labelable, PropertyContainer  {
-
-    private final UUID id;
+    //TODO: make this atomic and multi thread this program
+    private final long id;
     protected final Label label;
     protected final String variable;
     private final Map<String, Object> properties;
 
     protected Element(Builder builder)
     {
-        this.id = builder.id;
+        this.id = Builder.id;
         this.label = builder.label;
         this.variable = builder.variable;
         this.properties = builder.properties;
     }
 
-    public UUID getId()
+    public Long getId()
     {
         return this.id;
     }
@@ -35,9 +32,27 @@ public abstract class Element implements Labelable, PropertyContainer  {
     }
 
     @Override
+    public final boolean hasProperty(String key)
+    {
+        return (this.properties.get(key) != null);
+    }
+
+    @Override
     public final void setProperty(String key, Object value)
     {
         this.properties.put(key, value);
+    }
+
+    @Override
+    public final Object getProperty(String key)
+    {
+        return this.properties.get(key);
+    }
+
+    @Override
+    public final Object removeProperty(String key)
+    {
+        return this.properties.remove(key);
     }
 
     @Override
@@ -69,36 +84,65 @@ public abstract class Element implements Labelable, PropertyContainer  {
         return this.variable;
     }
 
-    public abstract static class Builder {
-        private final UUID id;
-        private Map<String, Object> properties;
-        private String variable;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Element element = (Element) o;
+
+        if (id != element.id) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (id ^ (id >>> 32));
+    }
+
+    public boolean isSimilar(Object o)
+    {
+        if(this.equals(o)) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Element element = (Element) o;
+
+        if(this.getProperties().size() != element.getProperties().size()) return false;
+        for(String key: element.getPropertyKeys())
+        {
+            if(!element.getProperty(key).equals(this.getProperty(key))) return false;
+        }
+        if(!element.getLabel().equals(this.getLabel())) return false;
+
+        return true;
+    }
+
+    public abstract static class Builder<T extends Element>{
+        private static Long id = 0L;
+        protected Map<String, Object> properties;
+        protected String variable;
         protected Label label;
 
         protected Builder()
         {
-            this.id = UUID.randomUUID();
+            this.properties = new HashMap<>();
+            Builder.id++;
         }
 
-        public final Builder properties(Map<String, Object> p)
+        protected Builder properties(Map<String, Object> p)
         {
             this.properties = p;
             return this;
         }
 
-        public final Builder var(String s)
+        public String getVariable()
         {
-            this.variable = s;
-            return this;
+            return this.variable;
         }
 
-        public Builder label(Label l)
-        {
-            this.label = l;
-            return this;
-        }
-
-        public abstract Element build();
+        public abstract T build();
     }
 
 }

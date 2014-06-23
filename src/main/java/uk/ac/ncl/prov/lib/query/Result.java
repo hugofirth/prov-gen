@@ -9,5 +9,7 @@ import java.util.Map;
 public interface Result {
     public Boolean isEmpty();
     public Boolean didUpdate();
+    public Integer netEffectVertices();
+    public Integer netEffectEdges();
     public Map<String, List<Object>> getResultList();
 }

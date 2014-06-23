@@ -1,8 +1,13 @@
 package uk.ac.ncl.prov.lib.constraint
 
 
-import uk.ac.ncl.prov.lib.prov_dm.{Type, Relation}
-import uk.ac.ncl.prov.lib.graph.vertex.Vertex.DegreePreposition
+import uk.ac.ncl.prov.lib.prov.Relation
+import uk.ac.ncl.prov.lib.graph.util.DegreePreposition
+import uk.ac.ncl.prov.lib.statistical._
+import scala.collection.JavaConverters._
+
+import uk.ac.ncl.prov.lib.graph.vertex.Vertex
+import uk.ac.ncl.prov.lib.graph.edge.Edge
 
 
 /**
@@ -12,57 +17,43 @@ import uk.ac.ncl.prov.lib.graph.vertex.Vertex.DegreePreposition
  * Time: 13:18
  * To change this template use File | Settings | File Templates.
  */
-
-//TODO: Refactor and improve very brittle implementation of operators, should be ok because of Cypher dynamic params, but still not ideal ...
-//TODO: Refactor out very close coupling with Cypher. Enums for operators?
-
 sealed abstract class Requirement {
 
-  private var max: Int = 0
-  private var min: Int = 0
-  private var n: Int = 0
   private var p: Double = 1.0
-  private var op: String = ""
+  private var op: Operator = _
+  private var dist: Option[Distribution] = None
 
-  def most = this.max
-  def least = this.min
-  def exact = this.n
   def probability = this.p
-  def range = (this.min, this.max)
-  def operation = op
+  def operation = this.op
+  def distribution = this.dist
 
-  def most_=(max: Int) = {
+  def atMost(max: Int) = {
     if(max > 0){
-      this.max = max
-      this.op = "<="+max
+      this.op = Most(max)
     } else {
       throw new IllegalArgumentException("Requirement range stipulations may not be for 0 or less")
     }
   }
 
-  def least_=(min: Int) = {
+  def atLeast(min: Int) = {
     if(min > 0){
-      this.min = min
-      this.op = ">="+min
+      this.op = Least(min)
     } else {
       throw new IllegalArgumentException("Requirement range stipulations may not be for 0 or less")
     }
   }
 
-  def range_=(range: (Int,Int)) = {
+  def inRange(range: (Int,Int)) = {
     if(range._1>0 &&  range._2>0 && range._1<range._2){
-      this.min = range._1
-      this.max = range._2
-      this.op = "IN range("+range._1+","+range._2+")"
+      this.op = Between(range._1, range._2)
     } else {
       throw new IllegalArgumentException("Requirement range stipulations may not be for 0 or less")
     }
   }
 
-  def exact_=(n: Int) = {
+  def exactly(n: Int) = {
     if(n>0){
-      this.n = n
-      this.op = "="+n
+      this.op = Exact(n)
     } else {
       throw new IllegalArgumentException("Requirement range stipulations may not be for 0 or less")
     }
@@ -76,27 +67,69 @@ sealed abstract class Requirement {
     }
   }
 
-  def toCypherQL: String
+  //TODO: remove unneeded dependency on Java Enum completely (rather than this halfway hodgepodge)
+  def distribution(d: DistributionType, params: List[String]) = d match {
+    case DistributionType.BINOMIAL => this.dist = Some(Binomial(params))
+    case DistributionType.GAMMA => this.dist = Some(Gamma(params))
+    case DistributionType.HYPERGEOMETRIC => this.dist = Some(HyperGeometric(params))
+    case DistributionType.PASCAL => this.dist = Some(Pascal(params))
+    case DistributionType.POISSON => this.dist = Some(Poisson(params))
+    case DistributionType.ZIPF => this.dist = Some(Zipf(params))
+  }
+
+  protected def check(v: Vertex): Boolean
+
+  def check(key: String): Boolean = Requirement.determiners.get(key).get.exists(v => check(v))
+}
+
+object Requirement {
+  private var determinedVertices: scala.collection.mutable.Map[String, Set[Vertex]] = _
+  def determiners(vertexSetMap: scala.collection.mutable.Map[String, Set[Vertex]]) = this.determinedVertices = vertexSetMap
+  def determiners = this.determinedVertices
 }
 
 case class DegreeRequirement(preposition: DegreePreposition = DegreePreposition.TOTAL) extends Requirement {
-  def toCypherQL: String = "n."+preposition.toString+"Degree"+" "+this.operation
+
+  protected def check(v: Vertex): Boolean = preposition match {
+    case DegreePreposition.IN => this.operation.check(v.getInEdges.size())
+    case DegreePreposition.OUT => this.operation.check(v.getOutEdges.size())
+    case DegreePreposition.TOTAL => this.operation.check(v.getEdges.size())
+  }
+
 }
 
 case class RelationshipRequirement(relation: Relation) extends Requirement {
 
-  private var mustRelatedTo: Option[Type] = None
+  private var mustBeRelatedTo: Option[Determiner] = None
 
-  def related = this.mustRelatedTo
+  def relatedTo = this.mustBeRelatedTo
 
-  def related_=(t: Type) = {
-    this.mustRelatedTo = Some(t)
+  def relatedTo(d: Determiner) = {
+    this.mustBeRelatedTo = Some(d)
   }
 
-  def toCypherQL: String = "(n)-[:"+relation.toString+"]-()"
+  protected def check(v: Vertex): Boolean = {
+    val edgeSet = v.getEdgesWithLabels(relation).asScala
+    if (mustBeRelatedTo.isDefined && mustBeRelatedTo.get.invariable)
+    {
+      val vertexSet = edgeSet.map( e => e.other(v))
+      Requirement.determiners.put(mustBeRelatedTo.get.identifier, vertexSet.toSet)
+      edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType))
+    }
+    else if(mustBeRelatedTo.isDefined)
+    {
+      edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType))
+    }
+    else
+    {
+      edgeSet.nonEmpty
+    }
+  }
 
 }
 
 case class PropertyRequirement(propertyKey: String, propertyValue: Any) extends Requirement {
-  def toCypherQL = "n."+propertyKey+" = \""+propertyValue+"\""
+  protected def check(v: Vertex): Boolean = {
+    v.getProperty(propertyKey).equals(propertyValue)
+  }
 }

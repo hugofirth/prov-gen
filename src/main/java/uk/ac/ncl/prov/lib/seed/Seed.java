@@ -11,19 +11,19 @@ import java.util.Set;
  */
 public class Seed {
 
-    private final List<Edge> edgess;
+    private final List<Edge> edges;
 
     public Seed(List<Edge> edges)
     {
         this.edges = edges;
     }
 
-    public List<Relationship> getEdges()
+    public List<Edge> getEdges()
     {
         return this.edges;
     }
 
-    public Set<Relationship> getUniqueEdges()
+    public Set<Edge> getUniqueEdges()
     {
         return new HashSet<>(this.edges);
     }

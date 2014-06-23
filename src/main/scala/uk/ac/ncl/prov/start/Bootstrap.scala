@@ -7,6 +7,6 @@ import javax.servlet.ServletContext
 
 class Bootstrap extends LifeCycle {
   override def init(context: ServletContext) {
-    context mount(new ConstraintController, "/constraints/*")
+    context mount(new ConstraintController, "/demo/*")
   }
 }

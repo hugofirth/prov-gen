@@ -9,19 +9,23 @@ import java.util.*;
  */
 public class CypherResult implements Result {
 
-    private final ExecutionResult result;
     private final Map<String, List<Object>> resultSet;
     private final Boolean updated;
     private final String resultString;
+    private final Integer netVertices;
+    private final Integer netEdges;
     private Boolean empty;
 
     public CypherResult(ExecutionResult result)
     {
-        this.result = result;
-        this.updated = result.getQueryStatistics().containsUpdates();
+        QueryStatistics stats = result.getQueryStatistics();
+        this.netVertices = stats.getNodesCreated() - stats.getDeletedNodes();
+        this.netEdges = stats.getRelationshipsCreated() - stats.getDeletedRelationships();
+        this.updated = stats.containsUpdates();
         this.resultSet = new HashMap<>();
+        this.empty = true;
 
-        for ( Map<String, Object> row : this.result )
+        for ( Map<String, Object> row : result )
         {
             for ( Map.Entry<String, Object> column : row.entrySet() )
             {
@@ -46,6 +50,16 @@ public class CypherResult implements Result {
     public Boolean didUpdate()
     {
         return this.updated;
+    }
+
+    @Override
+    public Integer netEffectVertices() {
+        return this.netVertices;
+    }
+
+    @Override
+    public Integer netEffectEdges() {
+        return this.netEdges;
     }
 
     @Override

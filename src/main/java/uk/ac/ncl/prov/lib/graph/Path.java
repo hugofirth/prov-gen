@@ -1,8 +1,10 @@
 package uk.ac.ncl.prov.lib.graph;
 
+import uk.ac.ncl.prov.lib.graph.edge.Edge;
+import uk.ac.ncl.prov.lib.graph.edge.Edge.EdgeBuilder;
 import uk.ac.ncl.prov.lib.graph.vertex.Vertex;
+import uk.ac.ncl.prov.lib.graph.vertex.Vertex.VertexBuilder;
 import uk.ac.ncl.prov.lib.graph.vertex.VertexLabel;
-import uk.ac.ncl.prov.lib.graph.relationship.Relationship;
 
 import java.util.*;
 
@@ -11,8 +13,22 @@ import java.util.*;
  */
 public class Path implements Iterable<Element> {
 
-    private List<Element> path;
-    private Map<String, Element> variables;
+    private final List<Element> path;
+    private final Map<String, Element> variables;
+    private final Vertex start;
+    private final Vertex end;
+    private final List<Vertex> vertices;
+    private final List<Edge> edges;
+
+    private Path(PathBuilder builder)
+    {
+        this.path = builder.path;
+        this.variables = builder.variables;
+        this.start = builder.start;
+        this.end = builder.end;
+        this.vertices = builder.vertices;
+        this.edges = builder.edges;
+    }
 
     @Override
     public Iterator<Element> iterator() {
@@ -24,45 +40,22 @@ public class Path implements Iterable<Element> {
         return this.variables;
     }
 
-    public static final class Builder {
+    public static final class PathBuilder {
 
-        private interface StartStep
+        public static PathBuilder P()
         {
-            RelationshipStep startVertex(Vertex n);
-            RelationshipStep startVertex(String var);
-            RelationshipStep startVertex(VertexLabel l);
-            RelationshipStep startVertex(Map<String, Object> properties);
-            RelationshipStep startVertex(String var, VertexLabel l);
-            RelationshipStep startVertex(String var, Map<String, Object> properties);
-            RelationshipStep startVertex(String var, VertexLabel l, Map<String, Object> properties);
-            RelationshipStep startVertex(VertexLabel l, Map<String, Object> properties);
+            return new PathBuilder();
         }
 
         private interface VertexStep
         {
-            RelationshipStep vertex(Vertex n);
-            RelationshipStep vertex(String var);
-            RelationshipStep vertex(VertexLabel l);
-            RelationshipStep vertex(Map<String, Object> properties);
-            RelationshipStep vertex(String var, VertexLabel l);
-            RelationshipStep vertex(String var, Map<String, Object> properties);
-            RelationshipStep vertex(String var, VertexLabel l, Map<String, Object> properties);
-            RelationshipStep vertex(VertexLabel l, Map<String, Object> properties);
-            Builder endVertex(Vertex n);
-            Builder endVertex(String var);
-            Builder endVertex(VertexLabel l);
-            Builder endVertex(Map<String, Object> properties);
-            Builder endVertex(String var, VertexLabel l);
-            Builder endVertex(String var, Map<String, Object> properties);
-            Builder endVertex(String var, VertexLabel l, Map<String, Object> properties);
-            Builder endVertex(VertexLabel l, Map<String, Object> properties);
+            RelationshipStep vertex(Vertex v);
         }
 
         private interface RelationshipStep
         {
-            OrientationStep hasRelationship(String var);
-            OrientationStep hasRelationship(Relationship r, String var);
-            OrientationStep hasRelationship(Relationship r);
+            OrientationStep hasEdge(Edge e);
+            Path build();
         }
 
         private interface OrientationStep
@@ -72,43 +65,79 @@ public class Path implements Iterable<Element> {
             VertexStep to();
         }
 
+        private String variable;
         private Vertex start;
         private Vertex end;
         private final Map<String, Element> variables;
-        private final List<Vertex> vertices;
-        private final List<Relationship> relationships;
-        private final List<Element> path;
+        private final LinkedList<Vertex> vertices;
+        private final LinkedList<Edge> edges;
+        private final LinkedList<Element> path;
 
-        public Builder()
+        private PathBuilder()
         {
             this.variables = new HashMap<>();
             this.vertices = new LinkedList<>();
-            this.relationships = new LinkedList<>();
+            this.edges = new LinkedList<>();
             this.path = new LinkedList<>();
         }
 
-        public RelationshipStep startVertex(Vertex n)
+        public RelationshipStep start(Vertex v)
         {
-            if(n.getVariable() != null)
+            if(v.getVariable() != null)
             {
-                this.variables.put(n.getVariable(), n);
+                this.variables.put(v.getVariable(), v);
             }
-            this.start = n;
-            this.vertices.add(n);
+            this.start = v;
+            this.vertices.add(v);
+            this.path.add(v);
             return new Steps();
         }
 
-        public RelationshipStep startVertex(String variable, VertexLabel l, Map<String, Object> properties)
+        public class Steps implements VertexStep, RelationshipStep, OrientationStep
         {
 
-        }
+            @Override
+            public VertexStep with() {
+                return this;
+            }
 
+            @Override
+            public VertexStep from() {
+                return this;
+            }
 
+            @Override
+            public VertexStep to() {
+                return this;
+            }
 
-        private final class Steps implements StartStep, VertexStep, RelationshipStep, OrientationStep
-        {
+            @Override
+            public OrientationStep hasEdge(Edge e) {
+                if(e.getVariable() != null)
+                {
+                    PathBuilder.this.variables.put(e.getVariable(), e);
+                }
+                PathBuilder.this.edges.add(e);
+                PathBuilder.this.path.add(e);
+                return this;
+            }
 
+            @Override
+            public RelationshipStep vertex(Vertex v) {
+                if(v.getVariable() != null)
+                {
+                    PathBuilder.this.variables.put(v.getVariable(), v);
+                }
+                PathBuilder.this.vertices.add(v);
+                PathBuilder.this.path.add(v);
+                return this;
+            }
 
+            @Override
+            public Path build() {
+                PathBuilder.this.end = PathBuilder.this.vertices.getLast();
+                return new Path(PathBuilder.this);
+            }
         }
     }
 }

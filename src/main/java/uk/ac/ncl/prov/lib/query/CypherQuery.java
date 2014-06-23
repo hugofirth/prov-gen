@@ -4,12 +4,16 @@ import uk.ac.ncl.prov.lib.graph.vertex.Vertex;
 
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by hugofirth on 09/03/2014.
  */
 public class CypherQuery implements Query {
-
+    private static final Random RAND = new Random();
+    private static final Pattern PARAM_PATTERN = Pattern.compile("\\$.*\\$");
+    private final Double probability;
     private final List<String> statements;
     private final List<SimpleEntry<Vertex, String>> matchStatements;
     private final String whereStatement;
@@ -17,6 +21,8 @@ public class CypherQuery implements Query {
     private final String createStatement;
     private final String mergeStatement;
     private final String returnStatement;
+    private final Map<String, String> params;
+
 
 
     //TODO: Finish this class
@@ -29,36 +35,72 @@ public class CypherQuery implements Query {
         this.createStatement = builder.createStatement;
         this.mergeStatement = builder.mergeStatement;
         this.returnStatement = builder.returnStatement;
+        this.probability = builder.probability;
+        this.params = new HashMap<>();
     }
 
     @Override
-    public String toQueryString() {
+    public String toQueryString()
+    {
         StringBuilder query = new StringBuilder();
         for(String statement : statements)
         {
-            query.append(statement + System.getProperty("line.separator"));
+            String param;
+            String value;
+            Matcher m = PARAM_PATTERN.matcher(statement);
+            while(m.find())
+            {
+               param = m.group(0);
+               value = params.get(param.replace("$",""));
+               statement = m.replaceAll(value);
+            }
+            query.append(statement).append(System.getProperty("line.separator"));
         }
         return query.toString();
+    }
+
+    @Override
+    public Boolean shouldExecute()
+    {
+        Double p = RAND.nextDouble();
+        return (p < this.probability);
+    }
+
+    @Override
+    public void provide(String key, String val) {
+        params.put(key, val);
     }
 
     public static final class CypherQueryBuilder {
         private final List<String> statements;
         private final List<SimpleEntry<Vertex, String>> matchStatements;
+        private final Double probability;
         private String whereStatement;
         private String otherStatement;
         private String createStatement;
         private String mergeStatement;
         private String returnStatement;
 
-        public CypherQueryBuilder()
+        public CypherQueryBuilder(Double probability)
         {
+            if(probability<0 || probability>1)
+            {
+                throw new IllegalArgumentException("Probability of query execution must be between 0 & 1. Provided: "+probability);
+            }
+            this.probability = probability;
             this.statements = new LinkedList<>();
             this.matchStatements = new LinkedList<>();
         }
 
-        public CypherQueryBuilder match(Vertex n, String s)
+        public CypherQueryBuilder()
         {
-            this.matchStatements.add(new SimpleEntry<>(n, s));
+            this.probability = 1.0;
+            this.statements = new LinkedList<>();
+            this.matchStatements = new LinkedList<>();
+        }
+
+        public CypherQueryBuilder match(String s)
+        {
             this.statements.add("MATCH " + s);
             return this;
         }
