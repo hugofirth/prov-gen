@@ -31,6 +31,7 @@ public class Operation {
         this.edge = edge;
         this.leftVertices = new LinkedList<>();
         this.rightVertices = new LinkedList<>();
+        this.createdEdges = new LinkedList<>();
     }
 
     public boolean isValidOn(Vertex v)
@@ -75,13 +76,13 @@ public class Operation {
         {
             throw new IllegalArgumentException("Operation invalid on vertex "+v);
         }
-
     }
 
     private void rationalize()
     {
         Iterator<Vertex> leftItr = this.leftVertices.iterator();
         Iterator<Vertex> rightItr = this.rightVertices.iterator();
+
         //Combine all the pairs, checking applicable constraints on edges as well.
         while(leftItr.hasNext() || rightItr.hasNext())
         {

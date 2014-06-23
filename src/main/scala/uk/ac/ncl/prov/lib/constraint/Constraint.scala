@@ -19,13 +19,13 @@ class Constraint private (val determiner: Determiner,
   def isSatisfiedBy(v: Vertex): Boolean = {
     if(!isApplicableTo(v))
     {
-      false
+      true //Constraint is restrictive not permissive.
     }
     else
     {
       Requirement.determiners(scala.collection.mutable.Map[String, Set[Vertex]]() += ("it" -> Set[Vertex](v)))
       val imperativeSatisfied: Boolean = this.imperative.requirement.check("it") == this.imperative.positive
-      if(this.conditions.isDefined && !(this.conditionsAreMet == this.conditions.get.when)) false else imperativeSatisfied
+      if(!this.conditions.isDefined || (this.conditions.isDefined && (this.conditionsAreMet == this.conditions.get.when))) imperativeSatisfied else true
     }
   }
 
@@ -45,7 +45,7 @@ class Constraint private (val determiner: Determiner,
     //An imperative requirement should check() on the first vertex in a set of vertices belonging to a determiner
 
 
-  def isSatisfiedBy(e: Edge): Boolean = false
+  def isSatisfiedBy(e: Edge): Boolean = e.getConnecting.forall(v => isSatisfiedBy(v))
 
   def isApplicableTo(v: Vertex): Boolean = this.determiner.provType.equals(v.getLabel)
 

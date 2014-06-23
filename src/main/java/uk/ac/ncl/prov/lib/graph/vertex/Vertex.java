@@ -153,6 +153,14 @@ public class Vertex extends Element {
         vertexScope.clear();
     }
 
+    @Override
+    public String toString() {
+        return "Vertex{" +
+                "id=" + this.getId() +
+                ", label=" + this.getLabel().getName() +
+                '}';
+    }
+
     public static class VertexBuilder extends Element.Builder<Vertex> {
 
         public static VertexBuilder V()

@@ -137,6 +137,16 @@ public class Edge extends Element {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "Edge{" +
+                "label=" + this.getLabel().getName() +
+                ", orientation=" + orientation +
+                ", from=" + connecting[0] +
+                ", to=" + connecting[1] +
+                '}';
+    }
+
     public static class EdgeBuilder extends Element.Builder<Edge> {
         private Orientation orientation;
         private Vertex[] connecting;

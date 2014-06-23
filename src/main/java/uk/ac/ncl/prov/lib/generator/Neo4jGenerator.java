@@ -69,11 +69,9 @@ public class Neo4jGenerator implements Generator {
     @Override
     public void execute(Integer size, Integer order, Integer numGraphs)
     {
-
         //While execution parameters not met. TODO: improve this generator to account for lots of small graphs
         while(this.edges.size()<=size && this.vertices.size()<=order)
         {
-            int one = this.edges.size();
             // loop through vertices, checking each vertex is valid for an operation, and adding it.
             for (Vertex v : this.vertices)
             {
@@ -91,11 +89,17 @@ public class Neo4jGenerator implements Generator {
             for(Operation o : this.operations)
             {
                List<Edge> newEdges = o.execute();
-               //TODO: Trace here.
                this.addEdges(newEdges);
             }
+
         }
         //Iteration should stop according to execution parameters.
+        List<Integer> vertexDegrees = new LinkedList<>();
+        for(Vertex v: this.getVertices())
+        {
+            vertexDegrees.add(v.getOutEdges().size());
+        }
+        throw new IllegalArgumentException("Generated graph of size: "+this.edges.size()+", order: "+this.vertices.size()+" & vertex degrees:"+vertexDegrees.toString()+". Elements -> "+this.edges.toString());
     }
 
     private void addEdges(Collection<Edge> edges)
