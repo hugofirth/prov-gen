@@ -30,7 +30,7 @@ public class Neo4jGenerator implements Generator {
             for(Edge definedEdge: Definition.RELATIONS)
             {
                 //If Definition.RELATIONS contains edge whose type = seed and between vertices of the same type
-                if(seedEdge.isSimilar(definedEdge))
+                if(seedEdge.isSimilarIgnoreProperties(definedEdge))
                 {
                     validSeedEdges.add(seedEdge);
                     //Collection of constraints applicable to an operation
@@ -91,6 +91,7 @@ public class Neo4jGenerator implements Generator {
             for(Operation o : this.operations)
             {
                List<Edge> newEdges = o.execute();
+               //TODO: Trace here.
                this.addEdges(newEdges);
             }
         }

@@ -64,18 +64,18 @@ public class Operation {
 
     public void add(Vertex v)
     {
-        if(this.isValidOn(v))
-        {
-            if(v.isSimilar(edge.getConnecting()[0]))
-            {
+        if(this.isValidOn(v)) {
+            if (v.isSimilar(edge.getConnecting()[0])) {
                 this.leftVertices.add(v);
-            }
-            else
-            {
+            } else {
                 this.rightVertices.add(v);
             }
         }
-        throw new IllegalArgumentException("Operation invalid on vertex "+v);
+        else
+        {
+            throw new IllegalArgumentException("Operation invalid on vertex "+v);
+        }
+
     }
 
     private void rationalize()
@@ -94,14 +94,14 @@ public class Operation {
             if (this.edge.getOrientation() == Edge.Orientation.DIRECTED)
             {
                 potentialEdge = E().label((EdgeLabel) this.edge.getLabel())
-                        .from(leftItr.next())
-                        .to(rightItr.next())
+                        .from(leftVertex)
+                        .to(rightVertex)
                         .properties(this.edge.getProperties()).build();
             }
             else
             {
                 potentialEdge = E().label((EdgeLabel) this.edge.getLabel())
-                        .between(leftItr.next(), rightItr.next())
+                        .between(leftVertex, rightVertex)
                         .properties(this.edge.getProperties()).build();
             }
 

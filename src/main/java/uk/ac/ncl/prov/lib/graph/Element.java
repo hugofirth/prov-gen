@@ -119,6 +119,19 @@ public abstract class Element implements Labelable, PropertyContainer  {
         return true;
     }
 
+    public boolean isSimilarIgnoreProperties(Object o)
+    {
+        if(this.equals(o)) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Element element = (Element) o;
+
+        if(!element.getLabel().equals(this.getLabel())) return false;
+
+        return true;
+    }
+
     public abstract static class Builder<T extends Element>{
         private static Long id = 0L;
         protected Map<String, Object> properties;

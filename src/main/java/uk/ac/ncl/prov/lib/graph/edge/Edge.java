@@ -96,14 +96,14 @@ public class Edge extends Element {
     @Override
     public boolean isSimilar(Object o)
     {
-        if(!super.isSimilar(o)) return false;
+        if(!(super.isSimilar(o))) return false;
         if (o == null || getClass() != o.getClass()) return false;
         Edge edge = (Edge) o;
-        if(!edge.getOrientation().equals(this.getOrientation())) return false;
+        if(!(edge.getOrientation().equals(this.getOrientation()))) return false;
         if(edge.isDirected())
         {
-            if(!edge.getConnecting()[0].isSimilar(this.getConnecting()[0])) return false;
-            if(!edge.getConnecting()[1].isSimilar(this.getConnecting()[1])) return false;
+            if(!(edge.getConnecting()[0].isSimilar(this.getConnecting()[0]))) return false;
+            if(!(edge.getConnecting()[1].isSimilar(this.getConnecting()[1]))) return false;
         }
         else
         {
@@ -111,6 +111,28 @@ public class Edge extends Element {
                 edge.getConnecting()[0].isSimilar(this.getConnecting()[1]))) return false;
             if(!(edge.getConnecting()[1].isSimilar(this.getConnecting()[0]) ||
                     edge.getConnecting()[1].isSimilar(this.getConnecting()[1]))) return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isSimilarIgnoreProperties(Object o)
+    {
+        if(!(super.isSimilarIgnoreProperties(o))) return false;
+        if (o == null || getClass() != o.getClass()) return false;
+        Edge edge = (Edge) o;
+        if(!(edge.getOrientation().equals(this.getOrientation()))) return false;
+        if(edge.isDirected())
+        {
+            if(!(edge.getConnecting()[0].isSimilarIgnoreProperties(this.getConnecting()[0]))) return false;
+            if(!(edge.getConnecting()[1].isSimilarIgnoreProperties(this.getConnecting()[1]))) return false;
+        }
+        else
+        {
+            if(!(edge.getConnecting()[0].isSimilarIgnoreProperties(this.getConnecting()[0]) ||
+                    edge.getConnecting()[0].isSimilarIgnoreProperties(this.getConnecting()[1]))) return false;
+            if(!(edge.getConnecting()[1].isSimilarIgnoreProperties(this.getConnecting()[0]) ||
+                    edge.getConnecting()[1].isSimilarIgnoreProperties(this.getConnecting()[1]))) return false;
         }
         return true;
     }
