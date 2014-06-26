@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class Edge extends Element {
     //TODO: refactor this ugly idea of scope out into something like a Graph or Path class
-    private static final HashMap<String, Edge> edgeScope = new HashMap<>();
+    public static final HashMap<String, Edge> edgeScope = new HashMap<>();
 
     private final Orientation orientation;
     private final Vertex[] connecting;
@@ -30,6 +30,17 @@ public class Edge extends Element {
         if(this.variable != null)
         {
             edgeScope.put(this.variable, this);
+        }
+
+        if(this.orientation == Orientation.DIRECTED)
+        {
+            this.connecting[0].addOutEdge(this);
+            this.connecting[1].addInEdge(this);
+        }
+        else
+        {
+            this.connecting[0].addEdge(this);
+            this.connecting[1].addEdge(this);
         }
     }
 
@@ -51,11 +62,6 @@ public class Edge extends Element {
     public Boolean connects(Vertex n)
     {
         return (n.equals(this.connecting[0]) || n.equals(this.connecting[1]));
-    }
-
-    public Vertex connectedTo(Vertex n)
-    {
-        return (n.equals(this.connecting[0]))?this.connecting[1]:this.connecting[0];
     }
 
     public Vertex from()
@@ -91,6 +97,16 @@ public class Edge extends Element {
     public void clearScope()
     {
         edgeScope.clear();
+    }
+
+    public void delete()
+    {
+        this.connecting[0].removeEdge(this);
+        this.connecting[1].removeEdge(this);
+        if(this.variable != null)
+        {
+            edgeScope.remove(this.variable);
+        }
     }
 
     @Override
@@ -140,11 +156,12 @@ public class Edge extends Element {
     @Override
     public String toString() {
         return "Edge{" +
-                "label=" + this.getLabel().getName() +
+                "id=" + this.getId() +
+                ", label=" + this.getLabel().getName() +
                 ", orientation=" + orientation +
                 ", from=" + connecting[0] +
                 ", to=" + connecting[1] +
-                '}';
+                "}";
     }
 
     public static class EdgeBuilder extends Element.Builder<Edge> {

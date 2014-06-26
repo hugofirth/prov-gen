@@ -14,17 +14,20 @@ import uk.ac.ncl.prov.lib.statistical.DistributionType
 class Constraint private (val determiner: Determiner,
                           val imperative: Imperative,
                           val conditions: Option[Conditions],
-                          val determiners: Map[String, Determiner]) {
+                          val determiners: Map[String, Determiner], val constraintString: String) {
 
-  def isSatisfiedBy(v: Vertex): Boolean = {
+  private def isSatisfiedBy(v: Vertex): Boolean = {
+    println("Checking if "+v+" satisfies the constraint: \""+this.constraintString+"\"")
     if(!isApplicableTo(v))
     {
+      println("This constraint is not appliable to "+v+" and is therefore satisfied.") //TRACE
       true //Constraint is restrictive not permissive.
     }
     else
     {
       Requirement.determiners(scala.collection.mutable.Map[String, Set[Vertex]]() += ("it" -> Set[Vertex](v)))
       val imperativeSatisfied: Boolean = this.imperative.requirement.check("it") == this.imperative.positive
+      if(imperativeSatisfied) println("This constraint's imperative is satisfied by "+v) else println("This constraint's imperative is not satisfied by "+v) //TRACE
       if(!this.conditions.isDefined || (this.conditions.isDefined && (this.conditionsAreMet == this.conditions.get.when))) imperativeSatisfied else true
     }
   }
@@ -61,6 +64,7 @@ case class Condition(requirement: Requirement, determiner: Determiner)
 object Constraint extends StandardTokenParsers {
 
   private var determiners: Map[String, Determiner] = _
+  private var constraintString: String = _
   override val lexical = new ExtLexical
 
   lexical.delimiters += ("(",")",".",",",";","=")
@@ -72,6 +76,7 @@ object Constraint extends StandardTokenParsers {
 
   def apply(dsl: String): Constraint = {
     determiners = Map()
+    constraintString = dsl
     parse(dsl)
   }
 
@@ -84,7 +89,7 @@ object Constraint extends StandardTokenParsers {
     }
 
   private def constraint: Parser[Constraint] = determiner~imperative~opt(conditions)^^{
-    case d~i~c => new Constraint(d, i, c, determiners)
+    case d~i~c => new Constraint(d, i, c, determiners, constraintString)
   }
 
   //Get the determined object or type to which a constraint applies

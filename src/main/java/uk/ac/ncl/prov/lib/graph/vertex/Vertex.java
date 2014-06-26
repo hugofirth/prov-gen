@@ -15,7 +15,7 @@ import java.util.*;
  */
 public class Vertex extends Element {
 
-    private static HashMap<String, Vertex> vertexScope = new HashMap<>();
+    public static HashMap<String, Vertex> vertexScope = new HashMap<>();
 
     private Set<Vertex> neighbours;
     private Map<Label, Set<Edge>> inEdges;
@@ -153,12 +153,37 @@ public class Vertex extends Element {
         vertexScope.clear();
     }
 
+    public void removeEdge(Edge e)
+    {
+        if(this.getInEdges().contains(e))
+        {
+            this.inEdges.get(e.getLabel()).remove(e);
+        }
+        else if(this.getOutEdges().contains(e))
+        {
+            this.outEdges.get(e.getLabel()).remove(e);
+        }
+        else if(this.getEdges().contains(e))
+        {
+            this.unEdges.get(e.getLabel()).remove(e);
+        }
+        else
+        {
+            throw new IllegalArgumentException("Vertex -> "+this.toString()+" does not have edge -> "+e.toString()+"!");
+        }
+
+    }
+
     @Override
     public String toString() {
         return "Vertex{" +
                 "id=" + this.getId() +
                 ", label=" + this.getLabel().getName() +
-                '}';
+                ", Degree={i:" + this.getInEdges().size() +
+                ", o:" + this.getOutEdges().size() +
+                ", t:" + this.getEdges().size() +
+                "}, " + this.getProperties() +
+                "}";
     }
 
     public static class VertexBuilder extends Element.Builder<Vertex> {

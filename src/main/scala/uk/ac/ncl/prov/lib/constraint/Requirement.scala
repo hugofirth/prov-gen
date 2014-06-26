@@ -112,7 +112,7 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
     val edgeSet = v.getEdgesWithLabels(relation).asScala
     if (mustBeRelatedTo.isDefined && mustBeRelatedTo.get.invariable)
     {
-      val vertexSet = edgeSet.map( e => e.other(v))
+      val vertexSet = edgeSet.map(e => e.other(v))
       Requirement.determiners.put(mustBeRelatedTo.get.identifier, vertexSet.toSet)
       edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType))
     }
@@ -130,6 +130,6 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
 
 case class PropertyRequirement(propertyKey: String, propertyValue: Any) extends Requirement {
   protected def check(v: Vertex): Boolean = {
-    v.getProperty(propertyKey).equals(propertyValue)
+    if(v.hasProperty(propertyKey)) v.getProperty(propertyKey).equals(propertyValue) else false
   }
 }

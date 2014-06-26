@@ -22,7 +22,8 @@ public class Operation {
     private Edge edge;
     private List<Vertex> leftVertices;
     private List<Vertex> rightVertices;
-    private List<Edge> createdEdges;
+    private Vertex left;
+    private Vertex right;
 
 
     public Operation(List<Constraint> applicableConstraints, Edge edge)
@@ -31,18 +32,8 @@ public class Operation {
         this.edge = edge;
         this.leftVertices = new LinkedList<>();
         this.rightVertices = new LinkedList<>();
-        this.createdEdges = new LinkedList<>();
-    }
-
-    public boolean isValidOn(Vertex v)
-    {
-        Boolean isValid = (this.edge.getConnecting()[0].isSimilar(v) || this.edge.getConnecting()[1].isSimilar(v));
-
-        if(isValid)
-        {
-            isValid = satisfiesConstraints(v);
-        }
-        return isValid;
+        this.right = V().label((VertexLabel) this.edge.getConnecting()[1].getLabel()).properties(this.edge.getConnecting()[1].getProperties()).build();
+        this.left = V().label((VertexLabel) this.edge.getConnecting()[0].getLabel()).properties(this.edge.getConnecting()[0].getProperties()).build();
     }
 
     private boolean satisfiesConstraints(Edge e)
@@ -54,69 +45,83 @@ public class Operation {
         return true;
     }
 
-    private boolean satisfiesConstraints(Vertex v)
+    public boolean isValidOn(Vertex v)
     {
-        for (Constraint c : this.applicableConstraints)
+        Edge potentialEdge;
+        if(v.isSimilar(this.edge.getConnecting()[0]))
         {
-            if (!c.isSatisfiedBy(v)) return false;
+            potentialEdge = this.createEdge(v, this.right);
         }
-        return true;
+        else if(v.isSimilar(this.edge.getConnecting()[1]))
+        {
+            potentialEdge = this.createEdge(this.left, v);
+        }
+        else
+        {
+            return false;
+        }
+
+        boolean satisfies = this.satisfiesConstraints(potentialEdge);
+        potentialEdge.delete();
+        return satisfies;
     }
 
     public void add(Vertex v)
     {
-        if(this.isValidOn(v)) {
             if (v.isSimilar(edge.getConnecting()[0])) {
                 this.leftVertices.add(v);
             } else {
                 this.rightVertices.add(v);
             }
+    }
+
+    private Edge createEdge(Vertex left, Vertex right)
+    {
+        Edge e;
+        if (this.edge.getOrientation() == Edge.Orientation.DIRECTED)
+        {
+            e = E().label((EdgeLabel) this.edge.getLabel())
+                   .from(left)
+                   .to(right)
+                   .properties(this.edge.getProperties()).build();
         }
         else
         {
-            throw new IllegalArgumentException("Operation invalid on vertex "+v);
+            e = E().label((EdgeLabel) this.edge.getLabel())
+                   .between(left, right)
+                   .properties(this.edge.getProperties()).build();
         }
-    }
-
-    private void rationalize()
-    {
-        Iterator<Vertex> leftItr = this.leftVertices.iterator();
-        Iterator<Vertex> rightItr = this.rightVertices.iterator();
-
-        //Combine all the pairs, checking applicable constraints on edges as well.
-        while(leftItr.hasNext() || rightItr.hasNext())
-        {
-            Vertex leftVertex = (leftItr.hasNext()) ? leftItr.next() : V().label((VertexLabel) this.edge.getConnecting()[0].getLabel())
-                    .properties(this.edge.getConnecting()[0].getProperties()).build();
-            Vertex rightVertex = (rightItr.hasNext()) ? rightItr.next() : V().label((VertexLabel) this.edge.getConnecting()[1].getLabel())
-                    .properties(this.edge.getConnecting()[1].getProperties()).build();
-
-            Edge potentialEdge;
-            if (this.edge.getOrientation() == Edge.Orientation.DIRECTED)
-            {
-                potentialEdge = E().label((EdgeLabel) this.edge.getLabel())
-                        .from(leftVertex)
-                        .to(rightVertex)
-                        .properties(this.edge.getProperties()).build();
-            }
-            else
-            {
-                potentialEdge = E().label((EdgeLabel) this.edge.getLabel())
-                        .between(leftVertex, rightVertex)
-                        .properties(this.edge.getProperties()).build();
-            }
-
-            if(this.satisfiesConstraints(potentialEdge))
-            {
-                this.createdEdges.add(potentialEdge);
-            }
-        }
+        return e;
     }
 
     public List<Edge> execute()
     {
-        this.rationalize();
-        return this.createdEdges;
+        List<Edge> createdEdges = new LinkedList<>();
+        Iterator<Vertex> leftItr = this.leftVertices.iterator();
+        Iterator<Vertex> rightItr = this.rightVertices.iterator();
+
+        //Combine all the pairs, checking applicable constraints on edges as well.
+        do
+        {
+            Vertex left = (leftItr.hasNext()) ? leftItr.next() : V().label((VertexLabel) this.edge.getConnecting()[0].getLabel())
+                    .properties(this.edge.getConnecting()[0].getProperties()).build();
+            Vertex right = (rightItr.hasNext()) ? rightItr.next() : V().label((VertexLabel) this.edge.getConnecting()[1].getLabel())
+                    .properties(this.edge.getConnecting()[1].getProperties()).build();
+            createdEdges.add(this.createEdge(left,right));
+//            Edge potentialEdge = this.createEdge(left, right);
+//
+//            if(this.satisfiesConstraints(potentialEdge))
+//            {
+//                createdEdges.add(potentialEdge);
+//            }
+//            else
+//            {
+//                potentialEdge.delete();
+//            }
+        } while(leftItr.hasNext() || rightItr.hasNext());
+        this.leftVertices.clear();
+        this.rightVertices.clear();
+        return createdEdges;
     }
 
 }

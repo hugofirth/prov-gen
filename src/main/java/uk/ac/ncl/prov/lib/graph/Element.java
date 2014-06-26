@@ -98,7 +98,7 @@ public abstract class Element implements Labelable, PropertyContainer  {
 
     @Override
     public int hashCode() {
-        return (int) (id ^ (id >>> 32));
+        return 31 * (int) (id ^ (id >>> 32));
     }
 
     public boolean isSimilar(Object o)

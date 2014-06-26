@@ -5,6 +5,7 @@ import uk.ac.ncl.prov.lib.constraint.Constraint
 import uk.ac.ncl.prov.lib.generator.{Generator, Neo4jGenerator}
 import uk.ac.ncl.prov.lib.graph.Element
 import uk.ac.ncl.prov.lib.graph.edge.Edge
+import uk.ac.ncl.prov.lib.graph.vertex.Vertex
 import uk.ac.ncl.prov.lib.prov.{Type, Relation, Definition}
 import uk.ac.ncl.prov.lib.seed.{ProvnSeed, Seed}
 import scala.collection.JavaConverters._
@@ -42,7 +43,8 @@ class ConstraintController extends Controller {
     //Execute generator
     generator.execute(executionParams.size, executionParams.order, executionParams.numGraphs)
     //Return success with random id
-    println("Finished executing")
+    println("Finished executing: Generated graph of size: "+generator.getEdges.size()+" and order: "+generator.getVertices.size())
+    if(generator.getEdges.size()<50) println("Elements -> "+generator.getEdges)
 
   }
 

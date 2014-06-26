@@ -13,12 +13,14 @@ public class Neo4jGenerator implements Generator {
 
     //Fields
     private List<Operation> operations;
-    private Set<Vertex> vertices;
+    private Set<Vertex> openVertices;
+    private Set<Vertex> closedVertices;
     private Set<Edge> edges;
 
     public Neo4jGenerator(Seed seed, List<Constraint> constraints)
     {
-        this.vertices = new HashSet<>();
+        this.openVertices = new HashSet<>();
+        this.closedVertices = new HashSet<>();
         this.edges = new HashSet<>();
         //Collection of operations to be iteratively executed
         this.operations = new LinkedList<>();
@@ -57,7 +59,9 @@ public class Neo4jGenerator implements Generator {
     @Override
     public Set<Vertex> getVertices()
     {
-        return this.vertices;
+        Set<Vertex> vertices = new HashSet<>(this.closedVertices);
+        vertices.addAll(this.openVertices);
+        return vertices;
     }
 
     @Override
@@ -70,20 +74,33 @@ public class Neo4jGenerator implements Generator {
     public void execute(Integer size, Integer order, Integer numGraphs)
     {
         //While execution parameters not met. TODO: improve this generator to account for lots of small graphs
-        while(this.edges.size()<=size && this.vertices.size()<=order)
+        while(this.edges.size()<=size && (this.openVertices.size()+this.closedVertices.size())<=order)
         {
+            int i = 0;
             // loop through vertices, checking each vertex is valid for an operation, and adding it.
-            for (Vertex v : this.vertices)
+            Set<Vertex> toClose = new HashSet<>();
+            for (Vertex v : this.openVertices)
             {
+                boolean open = false;
                 for (Operation o : this.operations)
                 {
-                    if (o.isValidOn(v))
+                    if (o.isValidOn(v)) //Expensive as ****
                     {
                         o.add(v);
+                        open = true;
+                        break;
                     }
+
                 }
                 //In an iteration if a vertex is not valid for any operation, remove it from the set.
+                if(!open)
+                {
+                    toClose.add(v);
+                }
             }
+
+            this.openVertices.removeAll(toClose);
+            this.closedVertices.addAll(toClose);
 
             //At the end of each iteration, execute all operations, adding resultant edges and vertices to set.
             for(Operation o : this.operations)
@@ -92,21 +109,17 @@ public class Neo4jGenerator implements Generator {
                this.addEdges(newEdges);
             }
 
+            if(++i>10) throw new IllegalArgumentException("Generated graph with "+this.getVertices().size()+" vertices and "+this.edges+" edges. Elements -> "+this.edges);
+
         }
-        //Iteration should stop according to execution parameters.
-        List<Integer> vertexDegrees = new LinkedList<>();
-        for(Vertex v: this.getVertices())
-        {
-            vertexDegrees.add(v.getOutEdges().size());
-        }
-        throw new IllegalArgumentException("Generated graph of size: "+this.edges.size()+", order: "+this.vertices.size()+" & vertex degrees:"+vertexDegrees.toString()+". Elements -> "+this.edges.toString());
+
     }
 
     private void addEdges(Collection<Edge> edges)
     {
         for(Edge e : edges)
         {
-            this.vertices.addAll(Arrays.asList(e.getConnecting()));
+            this.openVertices.addAll(Arrays.asList(e.getConnecting()));
         }
         this.edges.addAll(edges);
     }
