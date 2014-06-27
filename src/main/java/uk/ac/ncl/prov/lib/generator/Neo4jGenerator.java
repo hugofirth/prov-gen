@@ -89,7 +89,6 @@ public class Neo4jGenerator implements Generator {
                         open = true;
                         break;
                     }
-
                 }
                 //In an iteration if a vertex is not valid for any operation, remove it from the set.
                 if(!open)

@@ -7,6 +7,7 @@ import uk.ac.ncl.prov.lib.statistical._
 import scala.collection.JavaConverters._
 import uk.ac.ncl.prov.lib.graph.vertex.Vertex
 
+import scala.util.Random
 
 
 /**
@@ -18,7 +19,7 @@ import uk.ac.ncl.prov.lib.graph.vertex.Vertex
  */
 sealed abstract class Requirement {
 
-  private var p: Double = 1.0
+  private var p: Option[Double] = None
   private var op: Option[Operator] = None
   private var dist: Distribution = _
   private val ident: String =  java.util.UUID.randomUUID().toString
@@ -62,7 +63,7 @@ sealed abstract class Requirement {
 
   def probability_=(p: Double) = {
     if(p>=0.0 && p<=1.0){
-      this.p = p
+      this.p = Some(p)
     } else {
       throw new IllegalArgumentException("Requirement probability stipulations must be between 0 & 1")
     }
@@ -87,8 +88,15 @@ sealed abstract class Requirement {
   protected def check(v: Vertex): RequirementState
 
   def check(key: String): RequirementState = {
-    val checks: Set[RequirementState] = Requirement.determiners.get(key).get.map(v => check(v)).filter(v => v.continue)
-    if(checks.nonEmpty) checks.find(v => v.satisfied).getOrElse(RequirementState(-1)) else RequirementState(1)
+    val checks: Set[RequirementState] = Requirement.determiners.get(key).get.map(v => check(v)).filter(v => v.shouldContinue)
+    if(checks.nonEmpty)
+    {
+      checks.find(v => v.isSatisfied).getOrElse(RequirementState(satisfied = Some(false), continue = Some(true)))
+    }
+    else
+    {
+      RequirementState(satisfied = Some(false), continue = Some(false))
+    }
   }
 }
 
@@ -101,9 +109,9 @@ object Requirement {
 case class DegreeRequirement(preposition: DegreePreposition = DegreePreposition.TOTAL) extends Requirement {
 
   protected def check(v: Vertex): RequirementState = preposition match {
-    case DegreePreposition.IN => RequirementState(this.operationCheck(v.getInEdges.size(), v))
-    case DegreePreposition.OUT => RequirementState(this.operationCheck(v.getOutEdges.size(), v))
-    case DegreePreposition.TOTAL => RequirementState(this.operationCheck(v.getEdges.size(), v))
+    case DegreePreposition.IN => RequirementState(state = Some(this.operationCheck(v.getInEdges.size(), v)))
+    case DegreePreposition.OUT => RequirementState(state = Some(this.operationCheck(v.getOutEdges.size(), v)))
+    case DegreePreposition.TOTAL => RequirementState(state = Some(this.operationCheck(v.getEdges.size(), v)))
   }
 
 }
@@ -120,19 +128,40 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
 
   protected def check(v: Vertex): RequirementState = {
     val edgeSet = v.getEdgesWithLabels(relation).asScala
-    if (mustBeRelatedTo.isDefined && mustBeRelatedTo.get.invariable)
+    if (mustBeRelatedTo.isDefined && this.operation.isDefined)
     {
-      val vertexSet = edgeSet.map(e => e.other(v))
-      Requirement.determiners.put(mustBeRelatedTo.get.identifier, vertexSet.toSet)
-      RequirementState(this.operationCheck(edgeSet.count(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)), v))
+      if(mustBeRelatedTo.get.invariable)
+      {
+        val vertexSet = edgeSet.map(e => e.other(v))
+        Requirement.determiners.put(mustBeRelatedTo.get.identifier, vertexSet.toSet)
+      }
+      RequirementState(state = Some(this.operationCheck(edgeSet.count(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)), v)))
     }
     else if(mustBeRelatedTo.isDefined)
     {
-      RequirementState(this.operationCheck(edgeSet.count(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)), v))
+      if(edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)))
+      {
+        RequirementState(satisfied = Some(true), continue = Some(true))
+      }
+      else
+      {
+        RequirementState(satisfied = Some(false), continue = Some(true))
+      }
+    }
+    else if(this.operation.isDefined)
+    {
+      RequirementState(state = Some(this.operationCheck(edgeSet.size, v)))
     }
     else
     {
-      RequirementState(this.operationCheck(edgeSet.size, v))
+      if(edgeSet.nonEmpty)
+      {
+        RequirementState(satisfied = Some(true), continue = Some(true))
+      }
+      else
+      {
+        RequirementState(satisfied = Some(false), continue = Some(true))
+      }
     }
   }
 
@@ -140,11 +169,26 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
 
 case class PropertyRequirement(propertyKey: String, propertyValue: Any) extends Requirement {
   protected def check(v: Vertex): RequirementState = {
-    if(v.hasProperty(propertyKey) && v.getProperty(propertyKey).equals(propertyValue)) RequirementState(0) else RequirementState(1)
+    if(v.hasProperty(propertyKey) && v.getProperty(propertyKey).equals(propertyValue))
+    {
+      if(this.probability.isDefined && (this.probability.get < Random.nextDouble))
+      {
+        RequirementState(satisfied = Some(true), continue = Some(false))
+      }
+      else
+      {
+        RequirementState(satisfied = Some(true), continue = Some(true))
+      }
+    }
+    else
+    {
+      RequirementState(satisfied = Some(false), continue = Some(false))
+    }
   }
 }
 
-case class RequirementState(state: Int) {
-  val satisfied = state == 0
-  val continue = state < 1
+case class RequirementState(private val satisfied: Option[Boolean] = None, private val continue: Option[Boolean] = None, private val state: Option[Int] = None) {
+  require( state.isDefined || (satisfied.isDefined && continue.isDefined), "You must specify either a State (-1, 0 or 1) or both satisfied and continue parameters!")
+  val isSatisfied: Boolean = if(satisfied.isDefined) satisfied.get else state.get == 0
+  val shouldContinue: Boolean = if(continue.isDefined) continue.get else state.get < 1
 }
