@@ -76,7 +76,6 @@ public class Neo4jGenerator implements Generator {
         //While execution parameters not met. TODO: improve this generator to account for lots of small graphs
         while(this.edges.size()<=size && (this.openVertices.size()+this.closedVertices.size())<=order)
         {
-            int i = 0;
             // loop through vertices, checking each vertex is valid for an operation, and adding it.
             Set<Vertex> toClose = new HashSet<>();
             for (Vertex v : this.openVertices)
@@ -108,8 +107,6 @@ public class Neo4jGenerator implements Generator {
                List<Edge> newEdges = o.execute();
                this.addEdges(newEdges);
             }
-
-            if(++i>10) throw new IllegalArgumentException("Generated graph with "+this.getVertices().size()+" vertices and "+this.edges+" edges. Elements -> "+this.edges);
 
         }
 

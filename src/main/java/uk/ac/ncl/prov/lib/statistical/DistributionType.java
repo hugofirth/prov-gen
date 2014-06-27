@@ -8,6 +8,28 @@ import uk.ac.ncl.prov.lib.constraint.WithInput;
  */
 public enum DistributionType implements Term, WithInput {
 
+    UNIFORM("Uniform") {
+        @Override
+        public Boolean validateInput(Object... params)
+        {
+            if(params.length != 2)
+            {
+                throw new IllegalArgumentException("Wrong number of arguments! Uniform distribution requires (int lower, int upper).");
+            }
+            if(!(params[0] instanceof Integer))
+            {
+                throw new IllegalArgumentException("Wrong type for argument 1! Uniform distribution requires (int lower, int upper). Integer expected, instead got "+params[0].getClass().getCanonicalName());
+            }
+            if(!(params[1] instanceof Integer))
+            {
+                throw new IllegalArgumentException("Wrong type for argument 2! Uniform distribution requires (int lower, int upper). Integer expected, instead got "+params[1].getClass().getCanonicalName());
+            }
+
+            //If all validation successful
+            return true;
+        }
+    },
+
     BINOMIAL("Binomial") {
         @Override
         public Boolean validateInput(Object... params)
@@ -64,23 +86,6 @@ public enum DistributionType implements Term, WithInput {
                 {
                     throw new IllegalArgumentException("Wrongs type for argument "+i+"! HyperGeometric distribution requires (int populationSize, int numberOfSuccess, int sampleSize). Integer expected, instead got "+params[i].getClass().getCanonicalName());
                 }
-            }
-            //If all validation is successful
-            return true;
-        }
-    },
-
-    POISSON("Poisson") {
-        @Override
-        public Boolean validateInput(Object... params)
-        {
-            if(params.length != 1)
-            {
-                throw new IllegalArgumentException("Wrong number of arguments! Poisson distribution requires (double mean).");
-            }
-            if(!(params[0] instanceof Double))
-            {
-                throw new IllegalArgumentException("Wrong type for argument 1! Poisson distribution requires (double mean). Double expected, instead got "+params[0].getClass().getCanonicalName());
             }
             //If all validation is successful
             return true;

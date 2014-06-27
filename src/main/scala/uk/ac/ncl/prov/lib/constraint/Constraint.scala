@@ -26,7 +26,7 @@ class Constraint private (val determiner: Determiner,
     else
     {
       Requirement.determiners(scala.collection.mutable.Map[String, Set[Vertex]]() += ("it" -> Set[Vertex](v)))
-      val imperativeSatisfied: Boolean = this.imperative.requirement.check("it") == this.imperative.positive
+      val imperativeSatisfied: Boolean = (this.imperative.requirement.check("it")<1) == this.imperative.positive
       if(imperativeSatisfied) println("This constraint's imperative is satisfied by "+v) else println("This constraint's imperative is not satisfied by "+v) //TRACE
       if(!this.conditions.isDefined || (this.conditions.isDefined && (this.conditionsAreMet == this.conditions.get.when))) imperativeSatisfied else true
     }
@@ -52,7 +52,7 @@ class Constraint private (val determiner: Determiner,
 
   def isApplicableTo(v: Vertex): Boolean = this.determiner.provType.equals(v.getLabel)
 
-  private def conditionsAreMet: Boolean = if(this.conditions.isDefined) this.conditions.get.conditions.forall(c => c.requirement.check(c.determiner.identifier)) else true
+  private def conditionsAreMet: Boolean = if(this.conditions.isDefined) this.conditions.get.conditions.forall(c => c.requirement.check(c.determiner.identifier)<1) else true
 
 }
 

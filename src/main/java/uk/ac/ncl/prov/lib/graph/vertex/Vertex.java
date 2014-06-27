@@ -15,7 +15,7 @@ import java.util.*;
  */
 public class Vertex extends Element {
 
-    public static HashMap<String, Vertex> vertexScope = new HashMap<>();
+    private static HashMap<String, Vertex> vertexScope = new HashMap<>();
 
     private Set<Vertex> neighbours;
     private Map<Label, Set<Edge>> inEdges;

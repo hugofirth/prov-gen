@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class Edge extends Element {
     //TODO: refactor this ugly idea of scope out into something like a Graph or Path class
-    public static final HashMap<String, Edge> edgeScope = new HashMap<>();
+    private static final HashMap<String, Edge> edgeScope = new HashMap<>();
 
     private final Orientation orientation;
     private final Vertex[] connecting;

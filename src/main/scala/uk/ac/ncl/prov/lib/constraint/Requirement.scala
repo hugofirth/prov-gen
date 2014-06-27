@@ -5,9 +5,8 @@ import uk.ac.ncl.prov.lib.prov.Relation
 import uk.ac.ncl.prov.lib.graph.util.DegreePreposition
 import uk.ac.ncl.prov.lib.statistical._
 import scala.collection.JavaConverters._
-
 import uk.ac.ncl.prov.lib.graph.vertex.Vertex
-import uk.ac.ncl.prov.lib.graph.edge.Edge
+
 
 
 /**
@@ -20,8 +19,9 @@ import uk.ac.ncl.prov.lib.graph.edge.Edge
 sealed abstract class Requirement {
 
   private var p: Double = 1.0
-  private var op: Operator = _
-  private var dist: Option[Distribution] = None
+  private var op: Option[Operator] = None
+  private var dist: Distribution = _
+  private val ident: String =  java.util.UUID.randomUUID().toString
 
   def probability = this.p
   def operation = this.op
@@ -29,7 +29,7 @@ sealed abstract class Requirement {
 
   def atMost(max: Int) = {
     if(max > 0){
-      this.op = Most(max)
+      this.op = Some(Most(max))
     } else {
       throw new IllegalArgumentException("Requirement range stipulations may not be for 0 or less")
     }
@@ -37,7 +37,7 @@ sealed abstract class Requirement {
 
   def atLeast(min: Int) = {
     if(min > 0){
-      this.op = Least(min)
+      this.op = Some(Least(min))
     } else {
       throw new IllegalArgumentException("Requirement range stipulations may not be for 0 or less")
     }
@@ -45,7 +45,8 @@ sealed abstract class Requirement {
 
   def inRange(range: (Int,Int)) = {
     if(range._1>0 &&  range._2>0 && range._1<range._2){
-      this.op = Between(range._1, range._2)
+      this.op = Some(Between(range._1, range._2))
+      this.dist = Uniform(List(range._1.toString, range._2.toString))
     } else {
       throw new IllegalArgumentException("Requirement range stipulations may not be for 0 or less")
     }
@@ -53,7 +54,7 @@ sealed abstract class Requirement {
 
   def exactly(n: Int) = {
     if(n>0){
-      this.op = Exact(n)
+      this.op = Some(Exact(n))
     } else {
       throw new IllegalArgumentException("Requirement range stipulations may not be for 0 or less")
     }
@@ -69,17 +70,26 @@ sealed abstract class Requirement {
 
   //TODO: remove unneeded dependency on Java Enum completely (rather than this halfway hodgepodge)
   def distribution(d: DistributionType, params: List[String]) = d match {
-    case DistributionType.BINOMIAL => this.dist = Some(Binomial(params))
-    case DistributionType.GAMMA => this.dist = Some(Gamma(params))
-    case DistributionType.HYPERGEOMETRIC => this.dist = Some(HyperGeometric(params))
-    case DistributionType.PASCAL => this.dist = Some(Pascal(params))
-    case DistributionType.POISSON => this.dist = Some(Poisson(params))
-    case DistributionType.ZIPF => this.dist = Some(Zipf(params))
+    case DistributionType.BINOMIAL => this.dist = Binomial(params)
+    case DistributionType.GAMMA => this.dist = Gamma(params)
+    case DistributionType.HYPERGEOMETRIC => this.dist = HyperGeometric(params)
+    case DistributionType.PASCAL => this.dist = Pascal(params)
+    case DistributionType.ZIPF => this.dist = Zipf(params)
   }
 
-  protected def check(v: Vertex): Boolean
+  protected def operationCheck(value: Int, vertex: Vertex) = this.op match {
+    case o if this.op == Some(Between) =>
+      val rnd: Int = if(vertex.hasProperty(ident)) vertex.getProperty(ident, classOf[Int]) else {vertex.setProperty(ident, this.distribution.get); vertex.getProperty(ident, classOf[Int])}
+      Exact(rnd).check(value)
+    case o => this.operation.get.check(value)
+  }
 
-  def check(key: String): Boolean = Requirement.determiners.get(key).get.exists(v => check(v))
+  protected def check(v: Vertex): RequirementState
+
+  def check(key: String): RequirementState = {
+    val checks: Set[RequirementState] = Requirement.determiners.get(key).get.map(v => check(v)).filter(v => v.continue)
+    if(checks.nonEmpty) checks.find(v => v.satisfied).getOrElse(RequirementState(-1)) else RequirementState(1)
+  }
 }
 
 object Requirement {
@@ -90,10 +100,10 @@ object Requirement {
 
 case class DegreeRequirement(preposition: DegreePreposition = DegreePreposition.TOTAL) extends Requirement {
 
-  protected def check(v: Vertex): Boolean = preposition match {
-    case DegreePreposition.IN => this.operation.check(v.getInEdges.size())
-    case DegreePreposition.OUT => this.operation.check(v.getOutEdges.size())
-    case DegreePreposition.TOTAL => this.operation.check(v.getEdges.size())
+  protected def check(v: Vertex): RequirementState = preposition match {
+    case DegreePreposition.IN => RequirementState(this.operationCheck(v.getInEdges.size(), v))
+    case DegreePreposition.OUT => RequirementState(this.operationCheck(v.getOutEdges.size(), v))
+    case DegreePreposition.TOTAL => RequirementState(this.operationCheck(v.getEdges.size(), v))
   }
 
 }
@@ -108,28 +118,33 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
     this.mustBeRelatedTo = Some(d)
   }
 
-  protected def check(v: Vertex): Boolean = {
+  protected def check(v: Vertex): RequirementState = {
     val edgeSet = v.getEdgesWithLabels(relation).asScala
     if (mustBeRelatedTo.isDefined && mustBeRelatedTo.get.invariable)
     {
       val vertexSet = edgeSet.map(e => e.other(v))
       Requirement.determiners.put(mustBeRelatedTo.get.identifier, vertexSet.toSet)
-      edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType))
+      RequirementState(this.operationCheck(edgeSet.count(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)), v))
     }
     else if(mustBeRelatedTo.isDefined)
     {
-      edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType))
+      RequirementState(this.operationCheck(edgeSet.count(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)), v))
     }
     else
     {
-      edgeSet.nonEmpty
+      RequirementState(this.operationCheck(edgeSet.size, v))
     }
   }
 
 }
 
 case class PropertyRequirement(propertyKey: String, propertyValue: Any) extends Requirement {
-  protected def check(v: Vertex): Boolean = {
-    if(v.hasProperty(propertyKey)) v.getProperty(propertyKey).equals(propertyValue) else false
+  protected def check(v: Vertex): RequirementState = {
+    if(v.hasProperty(propertyKey) && v.getProperty(propertyKey).equals(propertyValue)) RequirementState(0) else RequirementState(1)
   }
+}
+
+case class RequirementState(state: Int) {
+  val satisfied = state == 0
+  val continue = state < 1
 }
