@@ -156,7 +156,13 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
     {
       if(edgeSet.nonEmpty)
       {
-        RequirementState(satisfied = Some(true), continue = Some(true))
+        if(this.probability.isDefined && (this.probability.get < Random.nextDouble))
+        {
+          RequirementState(satisfied = Some(true), continue = Some(false))
+        }
+        else {
+          RequirementState(satisfied = Some(true), continue = Some(true))
+        }
       }
       else
       {
