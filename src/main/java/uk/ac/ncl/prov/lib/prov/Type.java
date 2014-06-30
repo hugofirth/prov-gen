@@ -1,5 +1,6 @@
 package uk.ac.ncl.prov.lib.prov;
 
+import org.neo4j.graphdb.Label;
 import uk.ac.ncl.prov.lib.constraint.Term;
 import uk.ac.ncl.prov.lib.graph.vertex.VertexLabel;
 
@@ -10,7 +11,7 @@ import uk.ac.ncl.prov.lib.graph.vertex.VertexLabel;
  * Time: 14:47
  * To change this template use File | Settings | File Templates.
  */
-public enum Type implements VertexLabel, Term {
+public enum Type implements VertexLabel, Term, Label {
 
     ENTITY("Entity"),
     AGENT("Agent"),

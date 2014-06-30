@@ -6,7 +6,7 @@ import uk.ac.ncl.prov.lib.graph.util.DegreePreposition
 import uk.ac.ncl.prov.lib.statistical._
 import scala.collection.JavaConverters._
 import uk.ac.ncl.prov.lib.graph.vertex.Vertex
-
+import uk.ac.ncl.prov.lib.util.State
 import scala.util.Random
 
 
@@ -79,8 +79,8 @@ sealed abstract class Requirement {
   }
 
   protected def operationCheck(value: Int, vertex: Vertex) = this.op match {
-    case o if this.op == Some(Between) =>
-      val rnd: Int = if(vertex.hasProperty(ident)) vertex.getProperty(ident, classOf[Int]) else {vertex.setProperty(ident, this.distribution.get); vertex.getProperty(ident, classOf[Int])}
+    case o if this.op == Some(Between) => //Does this work?
+      val rnd: Int = if(vertex.hasProperty(ident)) vertex.getProperty(ident, classOf[Int]) else {vertex.setProperty(ident, this.distribution.getRand); vertex.getProperty(ident, classOf[Int])}
       Exact(rnd).check(value)
     case o => this.operation.get.check(value)
   }
@@ -193,8 +193,8 @@ case class PropertyRequirement(propertyKey: String, propertyValue: Any) extends 
   }
 }
 
-case class RequirementState(private val satisfied: Option[Boolean] = None, private val continue: Option[Boolean] = None, private val state: Option[Int] = None) {
+case class RequirementState(private val satisfied: Option[Boolean] = None, private val continue: Option[Boolean] = None, private val state: Option[Int] = None) extends State {
   require( state.isDefined || (satisfied.isDefined && continue.isDefined), "You must specify either a State (-1, 0 or 1) or both satisfied and continue parameters!")
-  val isSatisfied: Boolean = if(satisfied.isDefined) satisfied.get else state.get == 0
-  val shouldContinue: Boolean = if(continue.isDefined) continue.get else state.get < 1
+  override def isSatisfied: Boolean = if(satisfied.isDefined) satisfied.get else state.get == 0
+  override def shouldContinue: Boolean = if(continue.isDefined) continue.get else state.get < 1
 }

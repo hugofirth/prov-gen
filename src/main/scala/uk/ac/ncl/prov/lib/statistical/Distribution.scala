@@ -3,7 +3,7 @@ package uk.ac.ncl.prov.lib.statistical
 import org.apache.commons.math3.random.RandomDataGenerator
 
 sealed abstract class Distribution(params: List[String]) {
-  def get: Int
+  def getRand: Int
 }
 
 object Distribution {
@@ -16,7 +16,7 @@ case class Uniform(params: List[String]) extends Distribution(params)
   val lower: Double = params(0).toDouble
   val upper: Double = params(1).toDouble
 
-  override def get: Int = Distribution.rnd.nextUniform(lower, upper).ceil.toInt
+  override def getRand: Int = Distribution.rnd.nextUniform(lower, upper).ceil.toInt
 }
 
 case class Binomial(params: List[String]) extends Distribution(params)
@@ -25,7 +25,7 @@ case class Binomial(params: List[String]) extends Distribution(params)
   val trials: Int = params(0).toInt
   val p: Double = params(1).toDouble
 
-  override def get: Int = Distribution.rnd.nextBinomial(trials, p)
+  override def getRand: Int = Distribution.rnd.nextBinomial(trials, p)
 }
 
 case class Gamma(params: List[String]) extends Distribution(params)
@@ -34,7 +34,7 @@ case class Gamma(params: List[String]) extends Distribution(params)
   val shape: Double = params(0).toDouble
   val scale: Double = params(1).toDouble
 
-  override def get: Int = Distribution.rnd.nextGamma(shape, scale).ceil.toInt
+  override def getRand: Int = Distribution.rnd.nextGamma(shape, scale).ceil.toInt
 }
 
 case class HyperGeometric(params: List[String]) extends Distribution(params)
@@ -44,7 +44,7 @@ case class HyperGeometric(params: List[String]) extends Distribution(params)
   val numberOfSuccesses: Int = params(1).toInt
   val sampleSize: Int = params(2).toInt
 
-  override def get: Int = Distribution.rnd.nextHypergeometric(populationSize, numberOfSuccesses, sampleSize)
+  override def getRand: Int = Distribution.rnd.nextHypergeometric(populationSize, numberOfSuccesses, sampleSize)
 }
 
 case class Pascal(params: List[String]) extends Distribution(params)
@@ -53,7 +53,7 @@ case class Pascal(params: List[String]) extends Distribution(params)
   val r: Int = params(0).toInt
   val p: Double = params(1).toDouble
 
-  override def get: Int = Distribution.rnd.nextPascal(r, p)
+  override def getRand: Int = Distribution.rnd.nextPascal(r, p)
 }
 
 case class Zipf(params: List[String]) extends Distribution(params)
@@ -62,5 +62,5 @@ case class Zipf(params: List[String]) extends Distribution(params)
   val numberOfElements: Int = params(0).toInt
   val exponent: Double = params(1).toDouble
 
-  override def get: Int = Distribution.rnd.nextZipf(numberOfElements, exponent)
+  override def getRand: Int = Distribution.rnd.nextZipf(numberOfElements, exponent)
 }

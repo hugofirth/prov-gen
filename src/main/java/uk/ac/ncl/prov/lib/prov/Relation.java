@@ -1,5 +1,6 @@
 package uk.ac.ncl.prov.lib.prov;
 
+import org.neo4j.graphdb.RelationshipType;
 import uk.ac.ncl.prov.lib.graph.edge.EdgeLabel;
 
 /**
@@ -9,7 +10,7 @@ import uk.ac.ncl.prov.lib.graph.edge.EdgeLabel;
  * Time: 14:47
  * To change this template use File | Settings | File Templates.
  */
-public enum Relation implements EdgeLabel {
+public enum Relation implements EdgeLabel, RelationshipType {
     WASGENERATEDBY("WasGeneratedBy"),
     USED("Used"),
     WASINFORMEDBY("WasInformedBy"),
@@ -65,4 +66,5 @@ public enum Relation implements EdgeLabel {
     {
         return this.name;
     }
+
 }

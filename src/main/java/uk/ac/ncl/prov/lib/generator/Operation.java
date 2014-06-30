@@ -36,16 +36,21 @@ public class Operation {
         this.left = V().label((VertexLabel) this.edge.getConnecting()[0].getLabel()).properties(this.edge.getConnecting()[0].getProperties()).build();
     }
 
-    private boolean satisfiesConstraints(Edge e)
+    private OperationState evaluateAgainstConstraints(Edge e)
     {
+        boolean isSatisfied = true;
+        boolean shouldContinue = true;
         for (Constraint c : this.applicableConstraints)
         {
-            if (!c.isSatisfiedBy(e)) return false;
+            OperationState state = c.evaluate(e);
+            isSatisfied = isSatisfied && state.isSatisfied();
+            shouldContinue = shouldContinue && state.shouldContinue();
+            if (!isSatisfied && !shouldContinue) return new OperationState(false, false);
         }
-        return true;
+        return new OperationState(isSatisfied, shouldContinue);
     }
 
-    public boolean isValidOn(Vertex v)
+    public OperationState stateOn(Vertex v)
     {
         Edge potentialEdge;
         if(v.isSimilar(this.edge.getConnecting()[0]))
@@ -58,12 +63,12 @@ public class Operation {
         }
         else
         {
-            return false;
+            return new OperationState(false, false);
         }
 
-        boolean satisfies = this.satisfiesConstraints(potentialEdge);
+        OperationState opStateOn = this.evaluateAgainstConstraints(potentialEdge);
         potentialEdge.delete();
-        return satisfies;
+        return opStateOn;
     }
 
     public void add(Vertex v)

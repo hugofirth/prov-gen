@@ -1,9 +1,8 @@
 package uk.ac.ncl.prov.lib.constraint
 
+import uk.ac.ncl.prov.lib.generator.OperationState
 import uk.ac.ncl.prov.lib.graph.edge.Edge
 import uk.ac.ncl.prov.lib.graph.vertex.Vertex
-
-import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.syntactical._
 import uk.ac.ncl.prov.lib.prov.{Type, Relation}
 import uk.ac.ncl.prov.lib.graph.util.DegreePreposition
@@ -16,19 +15,31 @@ class Constraint private (val determiner: Determiner,
                           val conditions: Option[Conditions],
                           val determiners: Map[String, Determiner], val constraintString: String) {
 
-  private def isSatisfiedBy(v: Vertex): Boolean = {
+  private def evaluate(v: Vertex): OperationState = {
     println("Checking if "+v+" satisfies the constraint: \""+this.constraintString+"\"") //TRACE
     if(!isApplicableTo(v))
     {
-      println("This constraint is not appliable to "+v+" and is therefore satisfied.") //TRACE
-      true //Constraint is restrictive not permissive.
+      println("This constraint is not applicable to "+v+" and therefore the operation may continue") //TRACE
+      OperationState(satisfied = false, continue = true) //Constraint is restrictive not permissive.
     }
     else
     {
+      //TODO: keep an eye out on the below and perform some more exhaustive testing to avoid unexpected consequences
       Requirement.determiners(scala.collection.mutable.Map[String, Set[Vertex]]() += ("it" -> Set[Vertex](v)))
-      val imperativeSatisfied: Boolean = this.imperative.requirement.check("it").shouldContinue == this.imperative.positive
-      if(imperativeSatisfied) println("This constraint's imperative is satisfied by "+v) else println("This constraint's imperative is not satisfied by "+v) //TRACE
-      if(!this.conditions.isDefined || (this.conditions.isDefined && (this.conditionsAreMet == this.conditions.get.when))) imperativeSatisfied else true
+      val impReqState: RequirementState = this.imperative.requirement.check("it")
+      val impState: OperationState = OperationState(impReqState.isSatisfied == this.imperative.positive, impReqState.shouldContinue)
+
+      if(impState.isSatisfied) println("This constraint's imperative is satisfied by "+v) else println("This constraint's imperative is not satisfied by "+v) //TRACE
+
+      if(!this.conditions.isDefined || (this.conditions.isDefined && (this.conditionsAreMet == this.conditions.get.when)))
+      {
+        impState
+      }
+      else
+      {
+        //TODO: look into the possibility of using conditition's continue here
+        OperationState(satisfied = false, continue = true)
+      }
     }
   }
 
@@ -48,7 +59,11 @@ class Constraint private (val determiner: Determiner,
     //An imperative requirement should check() on the first vertex in a set of vertices belonging to a determiner
 
 
-  def isSatisfiedBy(e: Edge): Boolean = e.getConnecting.forall(v => isSatisfiedBy(v))
+  def evaluate(e: Edge): OperationState = {
+    val right: OperationState = this.evaluate(e.getConnecting()(1))
+    val left: OperationState = this.evaluate(e.getConnecting()(0))
+    OperationState(satisfied = left.isSatisfied && right.isSatisfied, continue = left.shouldContinue && right.shouldContinue)
+  }
 
   def isApplicableTo(v: Vertex): Boolean = this.determiner.provType.equals(v.getLabel)
 
