@@ -21,7 +21,7 @@ object ProvnSeed extends StandardTokenParsers {
   private val edges: ListBuffer[Edge] = ListBuffer()
   override val lexical = new ExtLexical
 
-  lexical.delimiters += ("(",")","[","]","-","=", ",", ";", ":")
+  lexical.delimiters += ("(",")","[","]","-","=", ",", ";")
   lexical.reserved += ("document", "endDocument", "prefix", "default")
 
   def apply(provn: String): Seed = {
@@ -76,9 +76,9 @@ object ProvnSeed extends StandardTokenParsers {
   }
 
   private def pair: Parser[(String, Any)] =
-    ident ~ ":" ~ (
+    ident ~ "=" ~ (
       stringLit ^^ (s => s) |
         numericLit ^^ (n => n.toInt)
-      ) ^^ { case k ~ ":" ~ v => (k, v)}
+      ) ^^ { case k ~ "=" ~ v => (k, v)}
 
 }

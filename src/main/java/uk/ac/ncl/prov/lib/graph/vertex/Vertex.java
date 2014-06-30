@@ -1,8 +1,5 @@
 package uk.ac.ncl.prov.lib.graph.vertex;
 
-
-
-import com.sun.org.omg.CORBA.ExceptionDescriptionHelper;
 import uk.ac.ncl.prov.lib.graph.Element;
 import uk.ac.ncl.prov.lib.graph.Label;
 import uk.ac.ncl.prov.lib.graph.edge.Edge;

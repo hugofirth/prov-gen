@@ -11,19 +11,19 @@ import uk.ac.ncl.prov.lib.graph.edge.EdgeLabel;
  * To change this template use File | Settings | File Templates.
  */
 public enum Relation implements EdgeLabel, RelationshipType {
-    WASGENERATEDBY("WasGeneratedBy"),
-    USED("Used"),
-    WASINFORMEDBY("WasInformedBy"),
-    WASDERIVEDFROM("WasDerivedFrom"),
-    WASATTRIBUTEDTO("WasAttributedTo"),
-    WASASSOCIATEDWITH("WasAssociatedWith"),
-    ACTEDONBEHALFOF("ActedOnBehalfOf"),
-    ALTERNATEOF("AlternateOf"),
-    SPECIALIZATIONOF("SpecializationOf"),
-    HADMEMBER("HadMember"),
-    WASINVALIDATEDBY("WasInvalidatedBy"),
-    WASSTARTEDBY("WasStartedBy"),
-    WASENDEDBY("WasEndedBy");
+    WASGENERATEDBY("WasGeneratedBy"),         //Done
+    USED("Used"),                             //Done
+    WASINFORMEDBY("WasInformedBy"),           //Done
+    WASDERIVEDFROM("WasDerivedFrom"),         //Done
+    WASATTRIBUTEDTO("WasAttributedTo"),       //Done
+    WASASSOCIATEDWITH("WasAssociatedWith"),   //Done
+    ACTEDONBEHALFOF("ActedOnBehalfOf"),       //Done
+    ALTERNATEOF("AlternateOf"),               //Done
+    SPECIALIZATIONOF("SpecializationOf"),     //Done
+    HADMEMBER("HadMember"),                   //Done
+    WASINVALIDATEDBY("WasInvalidatedBy"),     //Done
+    WASSTARTEDBY("WasStartedBy"),             //Done
+    WASENDEDBY("WasEndedBy");                 //Done
 
     private final String name;
 

@@ -16,10 +16,8 @@ class Constraint private (val determiner: Determiner,
                           val determiners: Map[String, Determiner], val constraintString: String) {
 
   private def evaluate(v: Vertex): OperationState = {
-    println("Checking if "+v+" satisfies the constraint: \""+this.constraintString+"\"") //TRACE
     if(!isApplicableTo(v))
     {
-      println("This constraint is not applicable to "+v+" and therefore the operation may continue") //TRACE
       OperationState(satisfied = false, continue = true) //Constraint is restrictive not permissive.
     }
     else
@@ -29,8 +27,6 @@ class Constraint private (val determiner: Determiner,
       val impReqState: RequirementState = this.imperative.requirement.check("it")
       val impState: OperationState = OperationState(impReqState.isSatisfied == this.imperative.positive, impReqState.shouldContinue)
 
-      if(impState.isSatisfied) println("This constraint's imperative is satisfied by "+v) else println("This constraint's imperative is not satisfied by "+v) //TRACE
-
       if(!this.conditions.isDefined || (this.conditions.isDefined && (this.conditionsAreMet == this.conditions.get.when)))
       {
         impState
@@ -38,7 +34,9 @@ class Constraint private (val determiner: Determiner,
       else
       {
         //TODO: look into the possibility of using conditition's continue here
-        OperationState(satisfied = false, continue = true)
+        //val continue = this.conditions.get.conditions.forall(c => c.requirement.check(c.determiner.identifier).shouldContinue)
+        OperationState(satisfied = false, continue = false)
+
       }
     }
   }

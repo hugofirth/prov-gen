@@ -56,7 +56,6 @@ public class ProvnExport implements Export {
         try(BufferedWriter writer = Files.newBufferedWriter(this.file, StandardCharsets.UTF_8, StandardOpenOption.APPEND))
         {
             writer.write("document"+System.getProperty("line.separator"));
-            writer.write("    prefix ex <http://example.org/>"+System.getProperty("line.separator")+System.getProperty("line.separator"));
             for(String n : this.nodes)
             {
                 writer.write("    " + n + System.getProperty("line.separator"));
@@ -66,27 +65,28 @@ public class ProvnExport implements Export {
             {
                 writer.write("    "+r+System.getProperty("line.separator"));
             }
-            writer.write("enddocument"+System.getProperty("line.separator"));
+            writer.write("endDocument"+System.getProperty("line.separator"));
         }
     }
 
     @Override
     public void serializeNode(Node n)
     {
-        String output;
+        StringBuilder output = new StringBuilder();
         String operator = "";
-        Boolean collection = false;
+        boolean collection = false;
+        boolean includeProperties = true;
         for(Label l : n.getLabels())
         {
-            switch (l.name())
+            switch (l.name().toLowerCase())
             {
-                case "Activity" :
+                case "activity" :
                     operator = "activity";
                     break;
-                case "Agent" :
+                case "agent" :
                     operator = "agent";
                     break;
-                case "Entity" :
+                case "entity" :
                     operator = "entity";
                     collection = n.hasRelationship(DynamicRelationshipType.withName("HADMEMBER"), Direction.OUTGOING);
                     break;
@@ -94,24 +94,38 @@ public class ProvnExport implements Export {
                     throw new IllegalArgumentException(l.name()+" is not a recognised PROV-N type.");
             }
         }
-        output = operator+"("+n.getId()+", ";
-        output += "[";
-        for(String key : n.getPropertyKeys())
+        output.append(operator).append("(").append(n.getId());
+        if(includeProperties)
         {
-            output += key+"=\""+n.getProperty(key)+"\", ";
+
+            output.append(", [");
+            int i = 0;
+            for(String key : n.getPropertyKeys())
+            {
+                output.append(key).append("=\"").append(n.getProperty(key)).append("\", ");
+                i++;
+            }
+            if(collection)
+            {
+                output.append("prov:type=\"prov:Collection\", ");
+            }
+            if(i>0 || collection)
+            {
+                output.delete(output.length()-2, output.length()-1);
+            }
+            output.append("]");
         }
-        output += (collection)?"prov:type=\"prov:Collection\", ":"";
-        output = output.substring(0, output.length() -2);
-        output += "])";
-        this.nodes.add(output);
+        output.append(")");
+        this.nodes.add(output.toString());
     }
 
     @Override
     public void serializeRelationship(Relationship r) {
-        String output;
+        StringBuilder output = new StringBuilder();
         String operator;
         String relType = r.getType().name();
-        Boolean includeId = true;
+        boolean includeId = true;
+        boolean includeProperties = true;
         switch (relType)
         {
             case "WASDERIVEDFROM" :
@@ -133,12 +147,55 @@ public class ProvnExport implements Export {
             case "WASINVALIDATEDBY" :
                 operator = "wasInvalidatedBy";
                 break;
+            case "WASINFORMEDBY" :
+                operator = "wasInformedBy";
+                break;
+            case "WASATTRIBUTEDTO" :
+                operator = "wasAttributedTo";
+                break;
+            case "ACTEDONBEHALFOF" :
+                operator = "actedOnBehalfOf";
+                break;
+            case "ALTERNATEOF" :
+                operator = "alternateOf";
+                includeId = false;
+                includeProperties = false;
+                break;
+            case "SPECIALIZATIONOF" :
+                operator = "alternateOf";
+                includeId = false;
+                includeProperties = false;
+                break;
+            case "WASSTARTEDBY" :
+                operator = "wasStartedBy";
+                break;
+            case "WASENDEDBY" :
+                operator = "wasEndedBy";
+                break;
             default:
                 throw new IllegalArgumentException(relType+" is not a recognised PROV-N relationship.");
         }
-        output = operator+"(";
-        output += (includeId)?r.getId()+"; ":"";
-        output += r.getStartNode().getId()+", "+r.getEndNode().getId()+")";
-        this.relationships.add(output);
+        output.append(operator).append("(");
+        if(includeId)
+        {
+            output.append(r.getId()).append("; ");
+        }
+        output.append(r.getStartNode().getId()).append(", ").append(r.getEndNode().getId());
+        if(includeProperties)
+        {
+            output.append(", [");
+            int i = 0;
+            for (String key : r.getPropertyKeys()) {
+                output.append(key).append("=\"").append(r.getProperty(key)).append("\", ");
+                i++;
+            }
+            if(i>0)
+            {
+                output.delete(output.length()-2, output.length()-1);
+            }
+            output.append("]");
+        }
+        output.append(")");
+        this.relationships.add(output.toString());
     }
 }

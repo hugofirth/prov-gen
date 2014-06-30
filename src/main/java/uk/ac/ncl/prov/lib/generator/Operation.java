@@ -20,6 +20,7 @@ public class Operation {
     //Fields
     private List<Constraint> applicableConstraints;
     private Edge edge;
+    private List<Edge> potentialEdges;
     private List<Vertex> leftVertices;
     private List<Vertex> rightVertices;
     private Vertex left;
@@ -30,6 +31,7 @@ public class Operation {
     {
         this.applicableConstraints = applicableConstraints;
         this.edge = edge;
+        this.potentialEdges = new LinkedList<>();
         this.leftVertices = new LinkedList<>();
         this.rightVertices = new LinkedList<>();
         this.right = V().label((VertexLabel) this.edge.getConnecting()[1].getLabel()).properties(this.edge.getConnecting()[1].getProperties()).build();
@@ -67,7 +69,7 @@ public class Operation {
         }
 
         OperationState opStateOn = this.evaluateAgainstConstraints(potentialEdge);
-        potentialEdge.delete();
+        this.potentialEdges.add(potentialEdge);
         return opStateOn;
     }
 
@@ -101,6 +103,11 @@ public class Operation {
 
     public List<Edge> execute()
     {
+        for(Edge pe: this.potentialEdges)
+        {
+            pe.delete();
+        }
+        this.potentialEdges = new LinkedList<>();
         List<Edge> createdEdges = new LinkedList<>();
         Iterator<Vertex> leftItr = this.leftVertices.iterator();
         Iterator<Vertex> rightItr = this.rightVertices.iterator();
@@ -124,8 +131,8 @@ public class Operation {
 //                potentialEdge.delete();
 //            }
         } while(leftItr.hasNext() || rightItr.hasNext());
-        this.leftVertices.clear();
-        this.rightVertices.clear();
+        this.leftVertices = new LinkedList<>();
+        this.rightVertices = new LinkedList<>();
         return createdEdges;
     }
 

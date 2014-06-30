@@ -20,9 +20,11 @@ public class Neo4jGenerator implements Generator {
     private Set<Vertex> openVertices;
     private Set<Vertex> closedVertices;
     private Set<Edge> edges;
+    private String dbPath;
 
-    public Neo4jGenerator(Seed seed, List<Constraint> constraints)
+    public Neo4jGenerator(String dbPath, Seed seed, List<Constraint> constraints)
     {
+        this.dbPath = dbPath;
         this.openVertices = new HashSet<>();
         this.closedVertices = new HashSet<>();
         this.edges = new HashSet<>();
@@ -92,7 +94,8 @@ public class Neo4jGenerator implements Generator {
                     {
                         op.add(v);
                         open = true;
-                        break;
+                        //break; //TODO: Revert this change if it turns out not be causing issue of preference for creating new nodes.
+
                     }
                     else if(stateOn.isSatisfied())
                     {
@@ -106,8 +109,8 @@ public class Neo4jGenerator implements Generator {
                 }
             }
 
-            this.openVertices.removeAll(toClose);
-            this.closedVertices.addAll(toClose);
+          this.openVertices.removeAll(toClose);
+          this.closedVertices.addAll(toClose);
 
             //At the end of each iteration, execute all operations, adding resultant edges and vertices to set.
             for(Operation op : this.operations)
@@ -136,7 +139,7 @@ public class Neo4jGenerator implements Generator {
         config.put( "neostore.propertystore.db.arrays.mapped_memory", "0M" );
 
         //Create BatchInserter
-        BatchInserter inserter = BatchInserters.inserter("target/prov-db", config);
+        BatchInserter inserter = BatchInserters.inserter(this.dbPath, config);
 
         //Create Neo4j nodes from vertex set
         for(Vertex v : this.getVertices())
@@ -151,7 +154,6 @@ public class Neo4jGenerator implements Generator {
         }
 
         inserter.shutdown();
-
     }
 
     private void addEdges(Collection<Edge> edges)

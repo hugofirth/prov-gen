@@ -1,16 +1,18 @@
 package uk.ac.ncl.prov.controller
 
-import org.json4s.jackson.Json
+
+
+import java.io.File
+import org.apache.commons.io.FileUtils
+import org.neo4j.graphdb.{Transaction, Node, Relationship, GraphDatabaseService}
+import org.neo4j.graphdb.factory.GraphDatabaseFactory
+import org.neo4j.tooling.GlobalGraphOperations
 import uk.ac.ncl.prov.lib.constraint.Constraint
+import uk.ac.ncl.prov.lib.export.{ProvnExport, Export}
 import uk.ac.ncl.prov.lib.generator.{Generator, Neo4jGenerator}
-import uk.ac.ncl.prov.lib.graph.Element
-import uk.ac.ncl.prov.lib.graph.edge.Edge
-import uk.ac.ncl.prov.lib.graph.vertex.Vertex
-import uk.ac.ncl.prov.lib.prov.{Type, Relation, Definition}
 import uk.ac.ncl.prov.lib.seed.{ProvnSeed, Seed}
 import scala.collection.JavaConverters._
-import uk.ac.ncl.prov.lib.graph.vertex.Vertex.VertexBuilder.V
-import uk.ac.ncl.prov.lib.graph.edge.Edge.EdgeBuilder.E
+
 
 //AST for request
 case class ExecutionParams(size:Int, order:Int, numGraphs:Int)
@@ -38,14 +40,33 @@ class ConstraintController extends Controller {
     //If all successful generate random id and store in a key value store with an unfinished flag
 
     //Create Generator object with all parameters, pass id to generator or maybe success callback?
-    val generator: Generator = new Neo4jGenerator(parsedSeed, parsedConstraints.asJava)
+    val generator: Generator = new Neo4jGenerator("target/prov-db", parsedSeed, parsedConstraints.asJava)
 
     //Execute generator
     generator.execute(executionParams.size, executionParams.order, executionParams.numGraphs)
-    //Return success with random id
-    println("Finished executing: Generated graph of size: "+generator.getEdges.size()+" and order: "+generator.getVertices.size())
-    if(generator.getEdges.size()<50) println("Elements -> "+generator.getEdges)
 
+    //Export generated graph to PROV-N
+    val graphDb: GraphDatabaseService = new GraphDatabaseFactory().newEmbeddedDatabase("target/prov-db")
+    val tx: Transaction = graphDb.beginTx()
+    val fileName: String = "target/"+System.currentTimeMillis()+".provn"
+    try {
+      val exporter: Export = new ProvnExport(fileName)
+      val nodes: Iterable[Node] = GlobalGraphOperations.at(graphDb).getAllNodes.asScala
+      val relationships: Iterable[Relationship] = GlobalGraphOperations.at(graphDb).getAllRelationships.asScala
+      for (n <- nodes) { exporter.serializeNode(n) }
+      for (r <- relationships) { exporter.serializeRelationship(r) }
+      exporter.export()
+      tx.success()
+    }
+    graphDb.shutdown()
+
+    //Clear database folders
+    FileUtils.deleteDirectory(new java.io.File("target/prov-db"))
+    //Return prov-n File
+    contentType = "text/provenance-notation"
+    val file: File = new java.io.File(fileName)
+    response.setHeader("Content-Disposition", "attachment; filename=" + file.getName)
+    file
   }
 
   get("/graphs/:id") {
