@@ -1,1 +1,30 @@
-<p>This is the generator view.</p>
+<div class="jumbotron">
+    <form novalidate>
+        <div class="row">
+            <div class="form-group">
+                <label for="seedGraphInput" class="control-label">Seed Graph</label>
+                <textarea name="seedGraphInput" class="form-control" id="seedGraphInput" rows="10" data-ng-model="generator.seed"></textarea>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group">
+                <label for="constraintRulesInput" class="control-label">Constraint Rules</label>
+                <textarea name="constraintRulesInput" class="form-control" id="constraintRulesInput" rows="10" data-ng-model="generator.constraints"></textarea>
+            </div>
+        </div>
+        <div class="row">
+            <label class="control-label" for="executionParameterInputs">Execution Parameters</label>
+            <fieldset class="form-inline" id="executionParameterInputs">
+                <input type="number" class="form-control" data-ng-model="generator.size" placeholder="Size"/>
+                <input type="number" class="form-control" data-ng-model="generator.order" placeholder="Order"/>
+                <input type="number" class="form-control" data-ng-model="generator.numGraphs" placeholder="Num Graphs"/>
+            </fieldset>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <p><button type="submit" id="generateButton" class="btn btn-lg btn-success" data-spinner-click="getGeneratedFile()">Generate <span class="glyphicon glyphicon-cog"></span></button></p>
+            </div>
+        </div>
+    </form>
+</div>
