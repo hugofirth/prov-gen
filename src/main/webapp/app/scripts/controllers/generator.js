@@ -8,14 +8,14 @@
  * Controller of the provGenApp
  */
 angular.module('provGenApp')
-  .controller('GeneratorCtrl', function ($scope, $q, $http) {
+  .controller('GeneratorCtrl', ['$scope', '$q', '$http', function ($scope, $q, $http) {
 
     $scope.generator = {};
 
     $scope.generatedFiles = [];
 
     $scope.getGeneratedFile = function () {
-        console.log("Hello :D");
+        console.log('Hello :D');
         var promise = generate();
 
         promise.then(function (result) {
@@ -36,4 +36,4 @@ angular.module('provGenApp')
         return deferred.promise;
     };
 
-  });
+  }]);
