@@ -50,3 +50,38 @@ an Entity must have relationship "WasGeneratedBy" exactly 1 times unless it has 
 an Activity must have degree at most 2;
 an Entity must have relationship "Used" exactly 1 times;
 ```
+
+##2. 
+In order to generate a slightly more complex example involving a greater range of PROV terms - provide the following **seed graph**:
+
+```
+document
+    entity(e1, [type="Document", version="original"])
+    entity(e2, [type="Document"])
+    activity(a1, [type="create"])
+    activity(a2, [type="edit"])
+    agent(ag, [type="Person"])
+    used(a2, e1)
+    wasGeneratedBy(e2, a2, [fct="save"])
+    wasGeneratedBy(e1, a1, [fct="publish"])
+    wasAssociatedWith(a2, ag, [role="contributor"])
+    wasAssociatedWith(a1, ag, [role="creator"])
+    wasDerivedFrom(e2, e1)
+endDocument
+```
+
+Along with the following **constraint rules**:
+
+```
+an Entity must have relationship "Used" at most 1 times;
+an Entity must have relationship "WasDerivedFrom" exactly 1 times unless it has property("version"="original");
+an Entity must have relationship "WasGeneratedBy" exactly 1 times;
+an Activity must have property("type"="create") with probability 0.01;
+an Entity must have out degree at most 2;
+an Activity must have relationship "WasAssociatedWith" exactly 1 times;
+an Activity must have relationship "Used" exactly 1 times unless it has property("type"="create");
+an Activity must have relationship "WasGeneratedBy" exactly 1 times;
+an Agent must have relationship "WasAssociatedWith" with probability 0.1;
+an Agent must have relationship "WasAssociatedWith" between 1, 120 times with distribution gamma(1.3, 2.4);
+```
+
