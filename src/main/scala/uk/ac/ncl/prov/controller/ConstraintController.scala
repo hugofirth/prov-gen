@@ -7,6 +7,7 @@ import org.apache.commons.io.FileUtils
 import org.neo4j.graphdb.{Transaction, Node, Relationship, GraphDatabaseService}
 import org.neo4j.graphdb.factory.GraphDatabaseFactory
 import org.neo4j.tooling.GlobalGraphOperations
+import org.scalatra.NotFound
 import uk.ac.ncl.prov.lib.constraint.Constraint
 import uk.ac.ncl.prov.lib.export.{ProvnExport, Export}
 import uk.ac.ncl.prov.lib.generator.{Generator, Neo4jGenerator}
@@ -17,6 +18,8 @@ import scala.collection.JavaConverters._
 //AST for request
 case class ExecutionParams(size:Int, order:Int, numGraphs:Int)
 case class Generation(seed:String,constraints:String, executionParams:ExecutionParams)
+//AST for response
+case class ProvnFile(name:String)
 
 class ConstraintController extends Controller {
 
@@ -50,9 +53,9 @@ class ConstraintController extends Controller {
     //Export generated graph to PROV-N
     val graphDb: GraphDatabaseService = new GraphDatabaseFactory().newEmbeddedDatabase("target/prov-db")
     val tx: Transaction = graphDb.beginTx()
-    val fileName: String = "target/"+System.currentTimeMillis()+".provn"
+    val fileName: String = System.currentTimeMillis()+".provn"
     try {
-      val exporter: Export = new ProvnExport(fileName)
+      val exporter: Export = new ProvnExport("target/"+fileName)
       val nodes: Iterable[Node] = GlobalGraphOperations.at(graphDb).getAllNodes.asScala
       val relationships: Iterable[Relationship] = GlobalGraphOperations.at(graphDb).getAllRelationships.asScala
       for (n <- nodes) { exporter.serializeNode(n) }
@@ -64,17 +67,24 @@ class ConstraintController extends Controller {
 
     //Clear database folders
     FileUtils.deleteDirectory(new java.io.File("target/prov-db"))
-    //Return prov-n File
-    contentType = "text/provenance-notation"
-    val file: File = new java.io.File(fileName)
-    response.setHeader("Content-Disposition", "attachment; filename=" + file.getName)
-    file
+    //Return the name of the file
+    ProvnFile(fileName)
   }
 
-  get("/graphs/:id") {
-
-    //This should actually be a websocket connection.
-
+  get("/graphs/:name") {
+    val fileName: String = params("name")
+    val file: File = new java.io.File("target/"+fileName)
+    if (file.exists) {
+      //This should actually be a websocket connection.
+      //Return prov-n File
+      contentType = "text/provenance-notation"
+      response.setHeader("Content-Disposition", "attachment; filename=" + file.getName)
+      file
+    }
+    else
+    {
+      NotFound("Sorry, the file could not be found")
+    }
   }
 
 }

@@ -8,7 +8,7 @@
  * Controller of the provGenApp
  */
 angular.module('provGenApp')
-  .controller('GeneratorCtrl', ['$scope', '$q', '$http', function ($scope, $q, $http) {
+  .controller('GeneratorCtrl', ['$scope', '$q', '$http', '$window', function ($scope, $q, $http, $window) {
 
     $scope.generator = {};
 
@@ -19,7 +19,7 @@ angular.module('provGenApp')
         var promise = generate();
 
         promise.then(function (result) {
-            $scope.generatedFiles.push(result);
+            $window.open('/demo/graphs/'+result.name);
             console.log(result);
         });
 
