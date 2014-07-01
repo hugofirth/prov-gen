@@ -4,6 +4,7 @@
 
 ####Building instructions:
 * Clone this repo `git clone...`
+* Use the following maven options `export MAVEN_OPTS="-Xms512m -Xmx1024m"`
 * From within the project root, run the command `mvn clean jetty:run`
 
 ####Usage:
