@@ -42,3 +42,10 @@ endDocument
 ```
 
 Along with the following **constraint rules**:
+
+```
+an Entity must have property("version"="original") with probability 0.1;
+an Entity must have relationship "WasGeneratedBy" exactly 1 times unless it has property("version"="original");
+an Activity must have degree at most 2;
+an Entity must have relationship "Used" exactly 1 times;
+```

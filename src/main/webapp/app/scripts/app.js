@@ -27,7 +27,7 @@ angular
         templateUrl: 'views/about.html',
         controller: 'AboutCtrl'
       })
-      .when('/demo', {
+      .when('/demo/:exampleId?', {
         templateUrl: 'views/generator.html',
         controller: 'GeneratorCtrl'
       })

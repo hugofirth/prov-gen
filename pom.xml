@@ -122,7 +122,7 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-webapp</artifactId>
         <version>9.0.4.v20130625</version>
-        <scope>container;compile</scope>
+        <scope>compile</scope>
     </dependency>
 
 
@@ -295,9 +295,6 @@
                 <webAppSourceDirectory>
                     ${project.basedir}/src/main/webapp/app
                 </webAppSourceDirectory>
-                <webApp>
-                    <contextPath>/</contextPath>
-                </webApp>
             </configuration>
         </plugin>
 

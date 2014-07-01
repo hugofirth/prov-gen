@@ -22,6 +22,8 @@ class ConstraintController extends Controller {
 
   post("/graphs") {
 
+    println("Received a request")
+
     //Parse Json input
     val input:Generation = parsedBody.extract[Generation]
 

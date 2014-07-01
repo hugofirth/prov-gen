@@ -15,9 +15,9 @@
         <div class="row">
             <label class="control-label" for="executionParameterInputs">Execution Parameters</label>
             <fieldset class="form-inline" id="executionParameterInputs">
-                <input type="number" class="form-control" data-ng-model="generator.size" placeholder="Size"/>
-                <input type="number" class="form-control" data-ng-model="generator.order" placeholder="Order"/>
-                <input type="number" class="form-control" data-ng-model="generator.numGraphs" placeholder="Num Graphs"/>
+                <input type="number" class="form-control" data-ng-model="generator.executionParams.size" placeholder="Size"/>
+                <input type="number" class="form-control" data-ng-model="generator.executionParams.order" placeholder="Order"/>
+                <input type="number" class="form-control" data-ng-model="generator.executionParams.numGraphs" placeholder="Num Graphs"/>
             </fieldset>
         </div>
 
@@ -27,4 +27,12 @@
             </div>
         </div>
     </form>
+</div>
+
+<div class="row marketing">
+    <table class="table table-striped">
+        <tr data-ng-repeat="generatedFile in generatedFiles">
+
+        </tr>
+    </table>
 </div>
