@@ -79,7 +79,7 @@ sealed abstract class Requirement {
   }
 
   protected def operationCheck(value: Int, vertex: Vertex) = this.op match {
-    case o if this.op == Some(Between) => //Does this work?
+    case o if this.op == Some(Between) => //Does this work? No
       val rnd: Int = if(vertex.hasProperty(ident)) vertex.getProperty(ident, classOf[Int]) else {vertex.setProperty(ident, this.distribution.getRand); vertex.getProperty(ident, classOf[Int])}
       Exact(rnd).check(value)
     case o => this.operation.get.check(value)
@@ -156,7 +156,7 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
     {
       if(edgeSet.nonEmpty)
       {
-        if(this.probability.isDefined && (this.probability.get < Random.nextDouble))
+        if(this.probability.isDefined && (this.probability.get > Random.nextDouble))
         {
           RequirementState(satisfied = Some(true), continue = Some(false))
         }
@@ -177,7 +177,7 @@ case class PropertyRequirement(propertyKey: String, propertyValue: Any) extends 
   protected def check(v: Vertex): RequirementState = {
     if(v.hasProperty(propertyKey) && v.getProperty(propertyKey).equals(propertyValue))
     {
-      if(this.probability.isDefined && (this.probability.get < Random.nextDouble))
+      if(this.probability.isDefined && (this.probability.get > Random.nextDouble))
       {
         RequirementState(satisfied = Some(true), continue = Some(false))
       }

@@ -7,9 +7,7 @@ import uk.ac.ncl.prov.lib.graph.edge.EdgeLabel;
 import uk.ac.ncl.prov.lib.graph.vertex.Vertex;
 import uk.ac.ncl.prov.lib.graph.vertex.VertexLabel;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static uk.ac.ncl.prov.lib.graph.vertex.Vertex.VertexBuilder.V;
 import static uk.ac.ncl.prov.lib.graph.edge.Edge.EdgeBuilder.E;
@@ -112,13 +110,18 @@ public class Operation {
         Iterator<Vertex> leftItr = this.leftVertices.iterator();
         Iterator<Vertex> rightItr = this.rightVertices.iterator();
 
+        HashMap<String, Object> rightNewProp = new HashMap<>(this.edge.getConnecting()[1].getProperties());  //TRACE
+        rightNewProp.put("_NEW_", "_NEW_");                                               //TRACE
+        HashMap<String, Object> leftNewProp = new HashMap<>(this.edge.getConnecting()[0].getProperties());   //TRACE
+        leftNewProp.put("_NEW_", "_NEW_");                                                //TRACE
+
         //Combine all the pairs, checking applicable constraints on edges as well.
         do
         {
             Vertex left = (leftItr.hasNext()) ? leftItr.next() : V().label((VertexLabel) this.edge.getConnecting()[0].getLabel())
-                    .properties(this.edge.getConnecting()[0].getProperties()).build();
+                    .properties(leftNewProp).build();
             Vertex right = (rightItr.hasNext()) ? rightItr.next() : V().label((VertexLabel) this.edge.getConnecting()[1].getLabel())
-                    .properties(this.edge.getConnecting()[1].getProperties()).build();
+                    .properties(rightNewProp).build();
             createdEdges.add(this.createEdge(left,right));
 //            Edge potentialEdge = this.createEdge(left, right);
 //

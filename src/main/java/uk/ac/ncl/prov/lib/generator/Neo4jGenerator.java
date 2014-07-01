@@ -82,11 +82,13 @@ public class Neo4jGenerator implements Generator {
         //While execution parameters not met. TODO: improve this generator to account for lots of small graphs
         while(this.edges.size()<=size && (this.openVertices.size()+this.closedVertices.size())<=order)
         {
+
             // loop through vertices, checking each vertex is valid for an operation, and adding it.
             Set<Vertex> toClose = new HashSet<>();
             for (Vertex v : this.openVertices)
             {
                 boolean open = false;
+                boolean low = true;
                 for (Operation op : this.operations)
                 {
                     OperationState stateOn = op.stateOn(v);

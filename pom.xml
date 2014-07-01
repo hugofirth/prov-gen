@@ -292,6 +292,7 @@
             <artifactId>jetty-maven-plugin</artifactId>
             <version>9.0.4.v20130625</version>
             <configuration>
+                <scanIntervalSeconds>10</scanIntervalSeconds>
                 <webAppSourceDirectory>
                     ${project.basedir}/src/main/webapp/app
                 </webAppSourceDirectory>
