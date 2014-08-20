@@ -215,7 +215,7 @@ public class Edge extends Element {
 
         public EdgeBuilder properties(Map<String, Object> p)
         {
-            this.properties = p;
+            super.properties(p);
             return this;
         }
 

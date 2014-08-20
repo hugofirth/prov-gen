@@ -22,7 +22,7 @@ sealed abstract class Requirement {
   private var p: Option[Double] = None
   private var op: Option[Operator] = None
   private var dist: Distribution = _
-  private val ident: String =  java.util.UUID.randomUUID().toString
+  private val ident: String =  "__"+java.util.UUID.randomUUID().toString
 
   def probability = this.p
   def operation = this.op
@@ -79,14 +79,26 @@ sealed abstract class Requirement {
   }
 
   protected def operationCheck(value: Int, vertex: Vertex) = this.op match {
-    case o if this.op == Some(Between) => //Does this work? No
-      val rnd: Int = if(vertex.hasProperty(ident)) vertex.getProperty(ident, classOf[Int]) else {vertex.setProperty(ident, this.distribution.getRand); vertex.getProperty(ident, classOf[Int])}
+    case Some(o: Between) => //Does this work? Yes apparently
+      val rnd: Int = {
+        if(vertex.hasProperty(ident))
+        {
+          vertex.getProperty(ident, classOf[java.lang.Integer])
+        }
+        else
+        {
+          vertex.setProperty(ident, this.distribution.getRand)
+          vertex.getProperty(ident, classOf[java.lang.Integer])
+        }
+      }
+      //TODO: work something out here other than exact
       Exact(rnd).check(value)
-    case o => this.operation.get.check(value)
+    case Some(o) => o.check(value)
   }
 
   protected def check(v: Vertex): RequirementState
 
+  //TODO: Keep an eye
   def check(key: String): RequirementState = {
     val checks: Set[RequirementState] = Requirement.determiners.get(key).get.map(v => check(v)).filter(v => v.shouldContinue)
     if(checks.nonEmpty)
@@ -139,6 +151,7 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
     }
     else if(mustBeRelatedTo.isDefined)
     {
+
       if(edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)))
       {
         RequirementState(satisfied = Some(true), continue = Some(true))
@@ -150,23 +163,20 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
     }
     else if(this.operation.isDefined)
     {
+      //This one always gets called?
       RequirementState(state = Some(this.operationCheck(edgeSet.size, v)))
     }
     else
     {
-      if(edgeSet.nonEmpty)
+      val hasRel: Boolean = edgeSet.nonEmpty
+      val probability: Boolean = this.probability.isDefined && (this.probability.get < Random.nextDouble)
+      if(!hasRel && probability)
       {
-        if(this.probability.isDefined && (this.probability.get > Random.nextDouble))
-        {
-          RequirementState(satisfied = Some(true), continue = Some(false))
-        }
-        else {
-          RequirementState(satisfied = Some(true), continue = Some(true))
-        }
+        RequirementState(satisfied = Some(hasRel), continue = Some(true))
       }
       else
       {
-        RequirementState(satisfied = Some(false), continue = Some(true))
+        RequirementState(satisfied = Some(hasRel), continue = Some(hasRel == probability))
       }
     }
   }
@@ -175,21 +185,9 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
 
 case class PropertyRequirement(propertyKey: String, propertyValue: Any) extends Requirement {
   protected def check(v: Vertex): RequirementState = {
-    if(v.hasProperty(propertyKey) && v.getProperty(propertyKey).equals(propertyValue))
-    {
-      if(this.probability.isDefined && (this.probability.get > Random.nextDouble))
-      {
-        RequirementState(satisfied = Some(true), continue = Some(false))
-      }
-      else
-      {
-        RequirementState(satisfied = Some(true), continue = Some(true))
-      }
-    }
-    else
-    {
-      RequirementState(satisfied = Some(false), continue = Some(false))
-    }
+    val hasProperty: Boolean = v.hasProperty(propertyKey) && v.getProperty(propertyKey).equals(propertyValue)
+    val probability: Boolean = this.probability.isDefined && (this.probability.get > Random.nextDouble)
+    RequirementState(satisfied = Some(hasProperty), continue = Some(probability == hasProperty))
   }
 }
 

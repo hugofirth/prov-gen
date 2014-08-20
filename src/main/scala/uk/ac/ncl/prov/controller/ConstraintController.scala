@@ -53,7 +53,8 @@ class ConstraintController extends Controller {
     //Export generated graph to PROV-N
     val graphDb: GraphDatabaseService = new GraphDatabaseFactory().newEmbeddedDatabase("target/prov-db")
     val tx: Transaction = graphDb.beginTx()
-    val fileName: String = System.currentTimeMillis()+".provn"
+    val time: String = System.currentTimeMillis().toString; //TRACE
+    val fileName: String = time+".provn"
     try {
       val exporter: Export = new ProvnExport("target/"+fileName)
       val nodes: Iterable[Node] = GlobalGraphOperations.at(graphDb).getAllNodes.asScala
@@ -66,14 +67,17 @@ class ConstraintController extends Controller {
     graphDb.shutdown()
 
     //Clear database folders
-    FileUtils.deleteDirectory(new java.io.File("target/prov-db"))
+    val db: File = new File("target/prov-db")
+    val output: File = new File("/Users/hugofirth/Desktop/Data/"+time+".db")
+    FileUtils.copyDirectory(db, output)
+    FileUtils.deleteDirectory(db)
     //Return the name of the file
     ProvnFile(fileName)
   }
 
   get("/graphs/:name") {
     val fileName: String = params("name")
-    val file: File = new java.io.File("target/"+fileName)
+    val file: File = new File("target/"+fileName)
     if (file.exists) {
       //This should actually be a websocket connection.
       //Return prov-n File

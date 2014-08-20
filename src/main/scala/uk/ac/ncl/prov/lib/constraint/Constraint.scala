@@ -23,6 +23,7 @@ class Constraint private (val determiner: Determiner,
     else
     {
       //TODO: keep an eye out on the below and perform some more exhaustive testing to avoid unexpected consequences
+      //Where does this get cleared? Oh - is created from scratch each time?
       Requirement.determiners(scala.collection.mutable.Map[String, Set[Vertex]]() += ("it" -> Set[Vertex](v)))
       val impReqState: RequirementState = this.imperative.requirement.check("it")
       val impState: OperationState = OperationState(impReqState.isSatisfied == this.imperative.positive, impReqState.shouldContinue)

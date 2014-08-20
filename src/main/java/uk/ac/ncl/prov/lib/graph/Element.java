@@ -109,10 +109,9 @@ public abstract class Element implements Labelable, PropertyContainer  {
 
         Element element = (Element) o;
 
-        if(this.getProperties().size() != element.getProperties().size()) return false;
         for(String key: element.getPropertyKeys())
         {
-            if(!element.getProperty(key).equals(this.getProperty(key))) return false;
+            if(!element.getProperty(key).equals(this.getProperty(key)) && !key.startsWith("__")) return false;
         }
         if(!element.getLabel().equals(this.getLabel())) return false;
 
@@ -134,7 +133,7 @@ public abstract class Element implements Labelable, PropertyContainer  {
 
     public abstract static class Builder<T extends Element>{
         private static Long id = 0L;
-        protected Map<String, Object> properties;
+        private Map<String, Object> properties;
         protected String variable;
         protected Label label;
 
@@ -146,7 +145,7 @@ public abstract class Element implements Labelable, PropertyContainer  {
 
         protected Builder properties(Map<String, Object> p)
         {
-            this.properties = p;
+            this.properties.putAll(p);
             return this;
         }
 

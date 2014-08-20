@@ -102,8 +102,11 @@ public class ProvnExport implements Export {
             int i = 0;
             for(String key : n.getPropertyKeys())
             {
-                output.append(key).append("=\"").append(n.getProperty(key)).append("\", ");
-                i++;
+                if(!key.startsWith("__"))
+                {
+                    output.append(key).append("=\"").append(n.getProperty(key)).append("\", ");
+                    i++;
+                }
             }
             if(collection)
             {
@@ -186,8 +189,10 @@ public class ProvnExport implements Export {
             output.append(", [");
             int i = 0;
             for (String key : r.getPropertyKeys()) {
-                output.append(key).append("=\"").append(r.getProperty(key)).append("\", ");
-                i++;
+                if(!key.startsWith("__")) {
+                    output.append(key).append("=\"").append(r.getProperty(key)).append("\", ");
+                    i++;
+                }
             }
             if(i>0)
             {

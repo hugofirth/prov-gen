@@ -8,6 +8,7 @@ import uk.ac.ncl.prov.lib.constraint.Constraint;
 import uk.ac.ncl.prov.lib.graph.edge.Edge;
 import uk.ac.ncl.prov.lib.graph.vertex.Vertex;
 import uk.ac.ncl.prov.lib.prov.Definition;
+import uk.ac.ncl.prov.lib.prov.Type;
 import uk.ac.ncl.prov.lib.seed.Seed;
 
 import java.util.*;
@@ -80,7 +81,7 @@ public class Neo4jGenerator implements Generator {
     public void execute(Integer size, Integer order, Integer numGraphs)
     {
         //While execution parameters not met. TODO: improve this generator to account for lots of small graphs
-        while(this.edges.size()<=size && (this.openVertices.size()+this.closedVertices.size())<=order)
+        while(this.edges.size()<=size || (this.openVertices.size()+this.closedVertices.size())<=order)
         {
 
             // loop through vertices, checking each vertex is valid for an operation, and adding it.
@@ -88,7 +89,6 @@ public class Neo4jGenerator implements Generator {
             for (Vertex v : this.openVertices)
             {
                 boolean open = false;
-                boolean low = true;
                 for (Operation op : this.operations)
                 {
                     OperationState stateOn = op.stateOn(v);
@@ -96,31 +96,42 @@ public class Neo4jGenerator implements Generator {
                     {
                         op.add(v);
                         open = true;
-                        //break; //TODO: Revert this change if it turns out not be causing issue of preference for creating new nodes.
+                    }
 
-                    }
-                    else if(stateOn.isSatisfied())
-                    {
-                        open = true;
-                    }
+                    //Two possible approaches:
+
+                    //Wrap around data structure to make sure all operations get a fair showing
+                    //Or maintain order and just cut satisfied vertices when limits hit,
+                    //Or mixture of the two?
+
                 }
                 //In an iteration if a vertex is not valid for any operation, remove it from the set.
                 if(!open)
                 {
                     toClose.add(v);
                 }
+                Collections.shuffle(this.operations);
             }
-
-          this.openVertices.removeAll(toClose);
-          this.closedVertices.addAll(toClose);
-
+            List<Edge> allNewEdges = new LinkedList<>();
             //At the end of each iteration, execute all operations, adding resultant edges and vertices to set.
             for(Operation op : this.operations)
             {
-               List<Edge> newEdges = op.execute();
-               this.addEdges(newEdges);
-            }
+                List<Edge> newEdges = op.execute(false);
 
+                if(newEdges.isEmpty() && ((this.openVertices.size()+this.closedVertices.size())<=order))
+                {
+                    newEdges = op.execute();
+                }
+                allNewEdges.addAll(newEdges);
+            }
+            if(allNewEdges.isEmpty())
+            {
+                //Get out of jail free card - avoid infinite run if we can't generate new edges without new vertices.
+                break;
+            }
+            this.addEdges(allNewEdges);
+            this.openVertices.removeAll(toClose);
+            this.closedVertices.addAll(toClose);
         }
 
         //Dump to Neo
@@ -160,6 +171,7 @@ public class Neo4jGenerator implements Generator {
 
     private void addEdges(Collection<Edge> edges)
     {
+
         for(Edge e : edges)
         {
             this.openVertices.addAll(Arrays.asList(e.getConnecting()));

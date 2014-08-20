@@ -145,6 +145,7 @@ public class Vertex extends Element {
         this.neighbours.add(v);
     }
 
+    //TODO: get rid of scope - doesn't belong here if anywhere
     public void clearScope()
     {
         vertexScope.clear();
@@ -208,7 +209,7 @@ public class Vertex extends Element {
 
         public VertexBuilder properties(Map<String, Object> p)
         {
-            this.properties = p;
+            super.properties(p);
             return this;
         }
 

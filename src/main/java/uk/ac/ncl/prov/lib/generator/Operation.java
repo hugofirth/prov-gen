@@ -40,6 +40,7 @@ public class Operation {
     {
         boolean isSatisfied = true;
         boolean shouldContinue = true;
+
         for (Constraint c : this.applicableConstraints)
         {
             OperationState state = c.evaluate(e);
@@ -53,13 +54,13 @@ public class Operation {
     public OperationState stateOn(Vertex v)
     {
         Edge potentialEdge;
-        if(v.isSimilar(this.edge.getConnecting()[0]))
+        if(v.isSimilar(this.left))
         {
-            potentialEdge = this.createEdge(v, this.right);
+            potentialEdge = this.createEdge(v, this.getRight());
         }
-        else if(v.isSimilar(this.edge.getConnecting()[1]))
+        else if(v.isSimilar(this.right))
         {
-            potentialEdge = this.createEdge(this.left, v);
+            potentialEdge = this.createEdge(this.getLeft(), v);
         }
         else
         {
@@ -67,17 +68,27 @@ public class Operation {
         }
 
         OperationState opStateOn = this.evaluateAgainstConstraints(potentialEdge);
-        this.potentialEdges.add(potentialEdge);
+        if(opStateOn.shouldContinue())
+        {
+            this.potentialEdges.add(potentialEdge);
+        }
+        else
+        {
+            potentialEdge.delete();
+        }
         return opStateOn;
     }
 
     public void add(Vertex v)
     {
-            if (v.isSimilar(edge.getConnecting()[0])) {
-                this.leftVertices.add(v);
-            } else {
-                this.rightVertices.add(v);
-            }
+        if (v.isSimilar(this.left))
+        {
+            this.leftVertices.add(v);
+        }
+        else if(v.isSimilar(this.right))
+        {
+            this.rightVertices.add(v);
+        }
     }
 
     private Edge createEdge(Vertex left, Vertex right)
@@ -110,33 +121,53 @@ public class Operation {
         Iterator<Vertex> leftItr = this.leftVertices.iterator();
         Iterator<Vertex> rightItr = this.rightVertices.iterator();
 
-        HashMap<String, Object> rightNewProp = new HashMap<>(this.edge.getConnecting()[1].getProperties());  //TRACE
-        rightNewProp.put("_NEW_", "_NEW_");                                               //TRACE
-        HashMap<String, Object> leftNewProp = new HashMap<>(this.edge.getConnecting()[0].getProperties());   //TRACE
-        leftNewProp.put("_NEW_", "_NEW_");                                                //TRACE
-
         //Combine all the pairs, checking applicable constraints on edges as well.
         do
         {
-            Vertex left = (leftItr.hasNext()) ? leftItr.next() : V().label((VertexLabel) this.edge.getConnecting()[0].getLabel())
-                    .properties(leftNewProp).build();
-            Vertex right = (rightItr.hasNext()) ? rightItr.next() : V().label((VertexLabel) this.edge.getConnecting()[1].getLabel())
-                    .properties(rightNewProp).build();
-            createdEdges.add(this.createEdge(left,right));
-//            Edge potentialEdge = this.createEdge(left, right);
-//
-//            if(this.satisfiesConstraints(potentialEdge))
-//            {
-//                createdEdges.add(potentialEdge);
-//            }
-//            else
-//            {
-//                potentialEdge.delete();
-//            }
-        } while(leftItr.hasNext() || rightItr.hasNext());
+            Vertex left = (leftItr.hasNext()) ? leftItr.next() : this.getLeft();
+            Vertex right = (rightItr.hasNext()) ? rightItr.next() : this.getRight();
+
+            Edge potentialEdge = this.createEdge(left, right);
+
+            if(this.evaluateAgainstConstraints(potentialEdge).shouldContinue())
+            {
+                createdEdges.add(potentialEdge);
+            }
+            else
+            {
+                potentialEdge.delete();
+            }
+        }
+        while(leftItr.hasNext() || rightItr.hasNext());
+
         this.leftVertices = new LinkedList<>();
         this.rightVertices = new LinkedList<>();
         return createdEdges;
+    }
+
+    public List<Edge> execute(boolean createNew)
+    {
+        if(!createNew && (this.leftVertices.isEmpty() || this.rightVertices.isEmpty()))
+        {
+
+            for(Edge pe: this.potentialEdges)
+            {
+                pe.delete();
+            }
+            this.potentialEdges = new LinkedList<>();
+            return new LinkedList<>();
+        }
+        return this.execute();
+    }
+
+    private Vertex getRight()
+    {
+        return V().label((VertexLabel) this.right.getLabel()).properties(this.right.getProperties()).build();
+    }
+
+    private Vertex getLeft()
+    {
+        return V().label((VertexLabel) this.left.getLabel()).properties(this.left.getProperties()).build();
     }
 
 }
