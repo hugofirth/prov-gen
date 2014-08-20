@@ -58,26 +58,33 @@ In order to generate a slightly more complex example involving a greater range o
 document
     entity(e1, [type="Document", version="original"])
     entity(e2, [type="Document"])
+    entity(e3, [type="Document"])
     activity(a1, [type="create"])
     activity(a2, [type="edit"])
+    activity(a3, [type="edit"])
     agent(ag, [type="Person"])
     used(a2, e1)
+    used(a3, e2)
     wasGeneratedBy(e2, a2, [fct="save"])
     wasGeneratedBy(e1, a1, [fct="publish"])
+    wasGeneratedBy(e3, a3, [fct="save"])
+    wasAssociatedWith(a3, ag, [role="contributor"])
     wasAssociatedWith(a2, ag, [role="contributor"])
     wasAssociatedWith(a1, ag, [role="creator"])
     wasDerivedFrom(e2, e1)
+    wasDerivedFrom(e3, e2)
 endDocument
 ```
 
 Along with the following **constraint rules**:
 
 ```
-an Entity must have relationship "Used" at most 1 times;
-an Entity must have relationship "WasDerivedFrom" exactly 1 times unless it has property("version"="original");
+an Entity must have relationship "WasDerivedFrom" exactly 2 times unless it has property("version"="original");
 an Entity must have relationship "WasGeneratedBy" exactly 1 times;
-an Activity must have property("type"="create") with probability 0.01;
+an Entity must have property("version"="original") with probability 0.05;
 an Entity must have out degree at most 2;
+an Activity must have relationship "Used" at most 1 times;
+an Activity must have property("type"="create") with probability 0.01;
 an Activity must have relationship "WasAssociatedWith" exactly 1 times;
 an Activity must have relationship "Used" exactly 1 times unless it has property("type"="create");
 an Activity must have relationship "WasGeneratedBy" exactly 1 times;
