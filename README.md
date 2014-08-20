@@ -79,12 +79,12 @@ endDocument
 Along with the following **constraint rules**:
 
 ```
-an Entity must have relationship "Used" at most 1 times;
-an Entity must have relationship "WasDerivedFrom" exactly 1 times unless it has property("version"="original");
+an Entity must have relationship "WasDerivedFrom" exactly 2 times unless it has property("version"="original");
 an Entity must have relationship "WasGeneratedBy" exactly 1 times;
-an Activity must have property("type"="create") with probability 0.01;
 an Entity must have property("version"="original") with probability 0.05;
 an Entity must have out degree at most 2;
+an Activity must have relationship "Used" at most 1 times;
+an Activity must have property("type"="create") with probability 0.01;
 an Activity must have relationship "WasAssociatedWith" exactly 1 times;
 an Activity must have relationship "Used" exactly 1 times unless it has property("type"="create");
 an Activity must have relationship "WasGeneratedBy" exactly 1 times;
