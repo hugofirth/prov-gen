@@ -94,6 +94,7 @@ sealed abstract class Requirement {
       //TODO: work something out here other than exact
       Exact(rnd).check(value)
     case Some(o) => o.check(value)
+    case _ => throw new IllegalArgumentException("Requirement operation should not be None!")
   }
 
   protected def check(v: Vertex): RequirementState
@@ -140,19 +141,19 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
 
   protected def check(v: Vertex): RequirementState = {
     val edgeSet = v.getEdgesWithLabels(relation).asScala
-    if (mustBeRelatedTo.isDefined && this.operation.isDefined)
+    if (mustBeRelatedTo.isDefined)
     {
       if(mustBeRelatedTo.get.invariable)
       {
         val vertexSet = edgeSet.map(e => e.other(v))
         Requirement.determiners.put(mustBeRelatedTo.get.identifier, vertexSet.toSet)
+        if(mustBeRelatedTo.get.identifier == "e2") println("e2 determiner found!")
       }
-      RequirementState(state = Some(this.operationCheck(edgeSet.count(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)), v)))
-    }
-    else if(mustBeRelatedTo.isDefined)
-    {
-
-      if(edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)))
+      if(this.operation.isDefined)
+      {
+        RequirementState(state = Some(this.operationCheck(edgeSet.count(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)), v)))
+      }
+      else if(edgeSet.exists(e => e.other(v).getLabel.equals(mustBeRelatedTo.get.provType)))
       {
         RequirementState(satisfied = Some(true), continue = Some(true))
       }

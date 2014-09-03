@@ -15,6 +15,7 @@ class Constraint private (val determiner: Determiner,
                           val conditions: Option[Conditions],
                           val determiners: Map[String, Determiner], val constraintString: String) {
 
+
   private def evaluate(v: Vertex): OperationState = {
     if(!isApplicableTo(v))
     {
@@ -24,8 +25,8 @@ class Constraint private (val determiner: Determiner,
     {
       //TODO: keep an eye out on the below and perform some more exhaustive testing to avoid unexpected consequences
       //Where does this get cleared? Oh - is created from scratch each time?
-      Requirement.determiners(scala.collection.mutable.Map[String, Set[Vertex]]() += ("it" -> Set[Vertex](v)))
-      val impReqState: RequirementState = this.imperative.requirement.check("it")
+      Requirement.determiners(scala.collection.mutable.Map[String, Set[Vertex]]() += (this.determiner.identifier -> Set[Vertex](v)))
+      val impReqState: RequirementState = this.imperative.requirement.check(this.determiner.identifier)
       val impState: OperationState = OperationState(impReqState.isSatisfied == this.imperative.positive, impReqState.shouldContinue)
 
       if(!this.conditions.isDefined || (this.conditions.isDefined && (this.conditionsAreMet == this.conditions.get.when)))
@@ -66,7 +67,16 @@ class Constraint private (val determiner: Determiner,
 
   def isApplicableTo(v: Vertex): Boolean = this.determiner.provType.equals(v.getLabel)
 
-  private def conditionsAreMet: Boolean = if(this.conditions.isDefined) this.conditions.get.conditions.forall(c => c.requirement.check(c.determiner.identifier).isSatisfied) else true
+  private def conditionsAreMet: Boolean = {
+    if(this.conditions.isDefined)
+    {
+      this.conditions.get.conditions.forall(c => c.requirement.check(c.determiner.identifier).isSatisfied)
+    }
+    else
+    {
+      true
+    }
+  }
 
 }
 
@@ -81,12 +91,12 @@ object Constraint extends StandardTokenParsers {
   private var constraintString: String = _
   override val lexical = new ExtLexical
 
-  lexical.delimiters += ("(",")",".",",",";","=")
-  lexical.reserved += (
-    "an", "a", "the", "have", "when", "unless", "it", "must", "distribution",
+  lexical.delimiters +=("(", ")", ".", ",", ";", "=")
+  lexical.reserved +=(
+    "an", "the", "have", "when", "unless", "it", "must", "distribution",
     "degree", "in", "out", "relationship", "at", "most", "not", "and", "has",
     "least", "between", "exactly", "property", "with", "probability", "times"
-  )
+    )
 
   def apply(dsl: String): Constraint = {
     determiners = Map()
@@ -102,65 +112,102 @@ object Constraint extends StandardTokenParsers {
       case Error(msg, _) => throw new IllegalArgumentException(msg)
     }
 
-  private def constraint: Parser[Constraint] = determiner~imperative~opt(conditions)^^{
-    case d~i~c => new Constraint(d, i, c, determiners, constraintString)
+  private def constraint: Parser[Constraint] = determiner ~ imperative ~ opt(conditions) ^^ {
+    case d ~ i ~ c => new Constraint(d, i, c, determiners, constraintString)
   }
 
   //Get the determined object or type to which a constraint applies
-  private def variableDeterminer = ("a" | "an") ~> ident
-  private def inVariableDeterminer = "the" ~> (ident <~ ",") ~ ident <~ ","
-  private def determiner: Parser[Determiner] =
-    (variableDeterminer^^{
-      case t =>
-        val d: Determiner = Determiner(Type.withName(t))
-        if (determiners.isEmpty) determiners += ("it" -> d); d
+  private def variableDeterminer = "an" ~> ident
+
+  private def inVariableDeterminer = "the" ~> (ident <~ "(") ~ ident <~ ")"
+
+  private def determiner: Parser[Determiner] = {
+    (variableDeterminer ^^ {
+      case t => {
+        if (determiners.isEmpty)
+        {
+          val d: Determiner = Determiner(Type.withName(t), identifier = "it"); determiners += ("it" -> d); d
+        }
+        else
+        {
+          val d: Determiner = Determiner(Type.withName(t)); d
+        }
+      }
     }) |
-    (inVariableDeterminer^^{
-      case t~o =>
-        val d: Determiner = Determiner(Type.withName(t), invariable = true, o)
-        determiners += (o -> d); d
+    (inVariableDeterminer ^^ {
+      case t ~ o => val d: Determiner = Determiner(Type.withName(t), invariable = true, o); determiners += (o -> d); d
     })
+  }
 
   //Get the imperative statement and its requirement function
-  private def imperative: Parser[Imperative] = "must"~>opt("not")~("have"~>requirement)^^{
-    case None~r => Imperative(r)
-    case Some("not")~r => Imperative(r, positive=false)
+  private def imperative: Parser[Imperative] = {
+    "must" ~> opt("not") ~ ("have" ~> requirement) ^^ {
+      case None ~ r => Imperative(r)
+      case Some("not") ~ r => Imperative(r, positive = false)
+    }
   }
 
   //Get the condition statement and its check function
-  private def condition: Parser[Condition] = (reference~("has"~>requirement))^^{
-    case ref~req if determiners.isDefinedAt(ref) => Condition(req, determiners.get(ref).get)
-    case ref~req => throw new IllegalArgumentException("Condition requirement reference "+ref+" is undefined!")
+  private def condition: Parser[Condition] = (reference ~ ("has" ~> requirement)) ^^ {
+    case ref ~ req if determiners.isDefinedAt(ref) => Condition(req, determiners.get(ref).get)
+    case ref ~ req => throw new IllegalArgumentException("Condition requirement reference " + ref + " is undefined!")
+    case _ => throw new IllegalArgumentException("There was an error when parsing your condition")
   }
 
-  private def conditions: Parser[Conditions] = (("when"|"unless")~rep1sep(condition, "and"))^^{
-    case "when"~cons => Conditions(cons)
-    case "unless"~cons => Conditions(cons, when=false)
+  //If Conditions keywords ("when" or "unless") are found, there is no need to backtrack.
+  private def conditions: Parser[Conditions] = {
+    (("when" | "unless") ~! rep1sep(condition, "and")) ^^ {
+      case "when" ~ cons => Conditions(cons)
+      case "unless" ~ cons => Conditions(cons, when = false)
+      case _ => throw new IllegalArgumentException("Conditional keywords (\"when\" or \"unless\") must be followed by " +
+        "1 or valid conditions");
+    }
   }
 
-  private def reference: Parser[String] = "it"|ident
+  private def reference: Parser[String] = "it" | ident
 
   //Get the requirements (for imperative and condition checks)
-  private def requirement: Parser[Requirement] = requirementFeature into requirementModifier
+  //TODO: allow requirements to not have modifiers (for the sake of conditions)
+  private def requirement: Parser[Requirement] = {
+    requirementFeature into optRequirementModifier
+  }
 
-  private def requirementModifier(req: Requirement): Parser[Requirement] =
-    (((rangeModifier(req)<~opt("times")) ~ opt(withDistribution(req))) | withModifier(req))^^{ _ => req }
+  private def optRequirementModifier(req: Requirement): Parser [Requirement] = {
+    requirementModifier(req) |
+      success({
+        req atLeast 1
+        println("TRACE: This requirements operation is: "+req.operation)
+        println("It belongs to the constraint: "+constraintString)
+        req
+      })
+  }
 
-  private def rangeModifier(req: Requirement): Parser[Requirement] =
-    (((("at"~>("most" | "least")) | "exactly") ~ numericLit)^^{
-      case "most"~n => req atMost n.toInt; req
-      case "least"~n => req atLeast n.toInt; req
-      case "exactly"~n => req exactly n.toInt; req
-    }) | (("between"~>numericLit~","~numericLit)^^{
-      case min~","~max => req inRange(min.toInt, max.toInt); req
-    })
+  private def requirementModifierKeyword: Parser[String] = guard("at" | "between" | "with" | "exactly")
 
-  private def withDistribution(req: Requirement) =
-    "with"~>"distribution"~>ident~("("~>rep1sep(numericLit, ",")<~")")^^{
-      case d~p => req.distribution(DistributionType.withName(d),p); req
+  private def requirementModifier(req: Requirement): Parser[Requirement] = {
+    requirementModifierKeyword~(((rangeModifier(req) <~ opt("times")) ~ opt(withDistribution(req))) |
+      withModifier(req)) ^^ {
+        _ => req
     }
+  }
 
-  private def withModifier(req: Requirement): Parser[Requirement] =  {
+  private def rangeModifier(req: Requirement): Parser[Requirement] = {
+    (((("at" ~> ("most" | "least")) | "exactly") ~ numericLit) ^^ {
+      case "most" ~ n => req atMost n.toInt; req
+      case "least" ~ n => req atLeast n.toInt; req
+      case "exactly" ~ n => req exactly n.toInt; req
+    }) | (("between" ~> numericLit ~ "," ~ numericLit) ^^ {
+      case min ~ "," ~ max => req inRange(min.toInt, max.toInt); req
+    })
+  }
+
+  private def withDistribution(req: Requirement) = {
+    "with" ~> "distribution" ~> ident ~ ("(" ~> rep1sep(numericLit, ",") <~ ")") ^^ {
+      case d ~ p => req.distribution(DistributionType.withName(d), p); req
+    }
+  }
+
+  private def withModifier(req: Requirement): Parser[Requirement] = {
     req match {
       case r: DegreeRequirement => err("_with_ modifiers may not be applied to Degree requirements")
       case r: RelationshipRequirement => withDeterminer(r) | withProbability(r)
@@ -169,34 +216,37 @@ object Constraint extends StandardTokenParsers {
     }
   }
 
-  //TODO: Decide between with and to...
-  private def withDeterminer(req: RelationshipRequirement): Parser[Requirement] = ("with"~>determiner)^^{
-    case d => req relatedTo d; req
+  private def withDeterminer(req: RelationshipRequirement): Parser[Requirement] = {
+    ("with" ~> determiner) ^^ {
+      case d => req relatedTo d; req
+    }
   }
 
   //TODO: Check how floats/doubles are actually parsed.
-  private def withProbability(req: Requirement): Parser[Requirement] = "with"~>"probability"~>numericLit^^{
-    case p => req.probability = p.toDouble; req
+  private def withProbability(req: Requirement): Parser[Requirement] = {
+    "with" ~> "probability" ~> numericLit ^^ {
+      case p => req.probability = p.toDouble; req
+    }
   }
 
-  private def requirementFeature: Parser[Requirement] =
-    (("relationship" ~> stringLit )^^{
+  private def requirementFeature: Parser[Requirement] = {
+    (("relationship" ~> stringLit) ^^ {
       case r => new RelationshipRequirement(Relation.withName(r))
     }) |
-    ((opt("in" | "out")~"degree")^^{
-      case Some("in")~"degree" => new DegreeRequirement(DegreePreposition.IN)
-      case Some("out")~"degree" => new DegreeRequirement(DegreePreposition.OUT)
-      case None~"degree" => new DegreeRequirement()
+    ((opt("in" | "out") ~ "degree") ^^ {
+      case Some("in") ~ "degree" => new DegreeRequirement(DegreePreposition.IN)
+      case Some("out") ~ "degree" => new DegreeRequirement(DegreePreposition.OUT)
+      case None ~ "degree" => new DegreeRequirement()
     }) |
-    (("property" ~> "(" ~> pair <~ ")")^^{
+    (("property" ~> "(" ~> pair <~ ")") ^^ {
       case (k, v) => PropertyRequirement(k, v)
     })
+  }
 
-  private def pair: Parser[(String, Any)] =
-    stringLit ~ "=" ~ (
-      stringLit ^^ (s => s) |
-      numericLit ^^ (n => n.toInt)
-    ) ^^ { case k ~ "=" ~ v => (unquote(k), v)}
-
+  private def pair: Parser[(String, Any)] = {
+    stringLit ~ "=" ~ (stringLit ^^ (s => s) | numericLit ^^ (n => n.toInt)) ^^ {
+      case k ~ "=" ~ v => (unquote(k), v)
+    }
+  }
 }
 
