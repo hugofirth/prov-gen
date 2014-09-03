@@ -68,8 +68,6 @@ class ConstraintController extends Controller {
 
     //Clear database folders
     val db: File = new File("target/prov-db")
-    val output: File = new File("/Users/hugofirth/Desktop/Data/"+time+".db")
-    FileUtils.copyDirectory(db, output)
     FileUtils.deleteDirectory(db)
     //Return the name of the file
     ProvnFile(fileName)
