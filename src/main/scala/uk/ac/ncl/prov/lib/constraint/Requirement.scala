@@ -140,6 +140,7 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
   }
 
   protected def check(v: Vertex): RequirementState = {
+    //TODO: Fix this... The logic of the if statements has gotten mangled.
     val edgeSet = v.getEdgesWithLabels(relation).asScala
     if (mustBeRelatedTo.isDefined)
     {
@@ -147,7 +148,6 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
       {
         val vertexSet = edgeSet.map(e => e.other(v))
         Requirement.determiners.put(mustBeRelatedTo.get.identifier, vertexSet.toSet)
-        if(mustBeRelatedTo.get.identifier == "e2") println("e2 determiner found!")
       }
       if(this.operation.isDefined)
       {
@@ -164,7 +164,6 @@ case class RelationshipRequirement(relation: Relation) extends Requirement {
     }
     else if(this.operation.isDefined)
     {
-      //This one always gets called?
       RequirementState(state = Some(this.operationCheck(edgeSet.size, v)))
     }
     else

@@ -31,15 +31,15 @@ class ConstraintSuite extends FunSuite with ShouldMatchers{
    */
 
   test("a valid constraint string should correctly identify an invariable determiner") {
-    val result = Constraint("the Entity, e1, must have relationship \"WasGeneratedBy\" at least 1 when e1 has relationship \"WasAttributedTo\"  at least 1")
+    val result = Constraint("the Entity(e1) must have relationship \"WasGeneratedBy\" when e1 has relationship \"WasAttributedTo\";")
     result.determiner.invariable should equal(true)
     result.determiner.identifier should (not be null and equal("e1"))
   }
 
   test("a valid constraint string should correctly identify a variable determiner") {
-    val result = Constraint("an Entity must have relationship \"WasGeneratedBy\" at least 1 when it has relationship \"WasAttributedTo\"  at least 1")
+    val result = Constraint("an Entity must have relationship \"WasGeneratedBy\" when it has relationship \"WasAttributedTo\";")
     result.determiner.invariable should equal(false)
-    result.determiner.identifier should equal("")
+    result.determiner.identifier should equal("it")
   }
 
   /**
@@ -72,7 +72,7 @@ class ConstraintSuite extends FunSuite with ShouldMatchers{
       case r: DegreeRequirement => {
         r.preposition should equal(DegreePreposition.OUT)
         r.operation match {
-          case op: Most => op.check(2) shouldBe true; op.check(5) shouldBe false
+          case Some(op: Most) => op.check(2) shouldBe 0; op.check(5) shouldBe 1
           case _ => fail("The rule, when parsed, does not produce a Degree requirement containing the correct [at Most] operation.")
         }
       }

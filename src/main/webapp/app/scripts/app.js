@@ -15,23 +15,24 @@ angular
     'ngResource',
     'ngRoute',
     'ngSanitize',
-    'ngTouch'
+    'ngTouch',
+    'angularSpinner'
   ])
-  .config(function ($routeProvider) {
-    $routeProvider
-      .when('/', {
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl'
-      })
-      .when('/about', {
-        templateUrl: 'views/about.html',
-        controller: 'AboutCtrl'
-      })
-      .when('/demo/:exampleId?', {
-        templateUrl: 'views/generator.html',
-        controller: 'GeneratorCtrl'
-      })
-      .otherwise({
-        redirectTo: '/'
-      });
-  });
+    .config(function ($routeProvider) {
+        $routeProvider
+            .when('/', {
+                templateUrl: 'views/main.html',
+                controller: 'MainCtrl'
+            })
+            .when('/about', {
+                templateUrl: 'views/about.html',
+                controller: 'AboutCtrl'
+            })
+            .when('/demo', {
+                templateUrl: 'views/generator.html',
+                controller: 'GeneratorCtrl'
+            })
+            .otherwise({
+                redirectTo: '/'
+            });
+    });

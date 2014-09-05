@@ -1,7 +1,7 @@
 package uk.ac.ncl.prov.controller
 
 
-
+import scala.io.Source._
 import java.io.File
 import org.apache.commons.io.FileUtils
 import org.neo4j.graphdb.{Transaction, Node, Relationship, GraphDatabaseService}
@@ -24,9 +24,7 @@ case class ProvnFile(name:String)
 class ConstraintController extends Controller {
 
   post("/graphs") {
-
     println("Received a request")
-
     //Parse Json input
     val input:Generation = parsedBody.extract[Generation]
 
@@ -77,15 +75,24 @@ class ConstraintController extends Controller {
     val fileName: String = params("name")
     val file: File = new File("target/"+fileName)
     if (file.exists) {
-      //This should actually be a websocket connection.
+      //TODO: Investigate making this a websocket connection.
       //Return prov-n File
       contentType = "text/provenance-notation"
       response.setHeader("Content-Disposition", "attachment; filename=" + file.getName)
-      file
+      fromFile(file).getLines mkString "\n"
     }
     else
     {
       NotFound("Sorry, the file could not be found")
+    }
+  }
+
+  after("/graphs/:name") {
+    //Delete the file after it has been requested.
+    val fileName: String = params("name")
+    val file: File = new File("target/"+fileName)
+    if (file.exists) {
+      file.delete()
     }
   }
 

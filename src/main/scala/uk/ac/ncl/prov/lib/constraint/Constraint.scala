@@ -173,13 +173,7 @@ object Constraint extends StandardTokenParsers {
   }
 
   private def optRequirementModifier(req: Requirement): Parser [Requirement] = {
-    requirementModifier(req) |
-      success({
-        req atLeast 1
-        println("TRACE: This requirements operation is: "+req.operation)
-        println("It belongs to the constraint: "+constraintString)
-        req
-      })
+    requirementModifier(req) | success({req atLeast 1;req})
   }
 
   private def requirementModifierKeyword: Parser[String] = guard("at" | "between" | "with" | "exactly")
