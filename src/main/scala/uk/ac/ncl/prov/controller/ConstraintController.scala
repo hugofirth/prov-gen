@@ -1,6 +1,8 @@
 package uk.ac.ncl.prov.controller
 
 
+import org.zeroturnaround.zip.ZipUtil
+
 import scala.io.Source._
 import java.io.File
 import org.apache.commons.io.FileUtils
@@ -17,9 +19,9 @@ import scala.collection.JavaConverters._
 
 //AST for request
 case class ExecutionParams(size:Int, order:Int, numGraphs:Int)
-case class Generation(seed:String,constraints:String, executionParams:ExecutionParams)
+case class Generation(seed:String,constraints:String,executionParams:ExecutionParams,includeDB:Boolean)
 //AST for response
-case class ProvnFile(name:String)
+case class GraphFile(name:String)
 
 class ConstraintController extends Controller {
 
@@ -33,21 +35,34 @@ class ConstraintController extends Controller {
     val constraintsBlob:String = input.constraints
     val executionParams:ExecutionParams = input.executionParams
 
+    println("Parsing Seed...")
+    val parseSeedStart = System.currentTimeMillis()
     //Parse seed
     val parsedSeed:Seed = ProvnSeed(seed)
+    println("Parsing Seed Finished. Took "+(System.currentTimeMillis()-parseSeedStart))
 
+    println("Parsing Constraints...")
+    val parseConstraintsStart = System.currentTimeMillis()
     //Parse constraints
     val constraints = constraintsBlob.split(";").toList
     val parsedConstraints:List[Constraint] = for (c <- constraints) yield Constraint(c)
-
+    println("Parsing Constraints Finished. Took "+(System.currentTimeMillis()-parseConstraintsStart))
     //If all successful generate random id and store in a key value store with an unfinished flag
 
+    println("Creating Generator...")
+    val createGeneratorStart = System.currentTimeMillis()
     //Create Generator object with all parameters, pass id to generator or maybe success callback?
     val generator: Generator = new Neo4jGenerator("target/prov-db", parsedSeed, parsedConstraints.asJava)
+    println("Finished Creating Generator. Took "+(System.currentTimeMillis()-createGeneratorStart))
 
+    println("Generating...")
+    val generatingStart = System.currentTimeMillis()
     //Execute generator
     generator.execute(executionParams.size, executionParams.order, executionParams.numGraphs)
+    println("Finished Generating. Took "+(System.currentTimeMillis()-generatingStart))
 
+    println("Exporting Graph to Prov-N...")
+    val exportingStart = System.currentTimeMillis()
     //Export generated graph to PROV-N
     val graphDb: GraphDatabaseService = new GraphDatabaseFactory().newEmbeddedDatabase("target/prov-db")
     val tx: Transaction = graphDb.beginTx()
@@ -63,23 +78,42 @@ class ConstraintController extends Controller {
       tx.success()
     }
     graphDb.shutdown()
+    println("Finished Exporting Graph. Took "+(System.currentTimeMillis()-exportingStart))
 
     //Clear database folders
-    val db: File = new File("target/prov-db")
-    FileUtils.deleteDirectory(db)
-    //Return the name of the file
-    ProvnFile(fileName)
+    if(input.includeDB)
+    {
+      val zip: File = new File("target/"+time+".zip")
+      FileUtils.moveDirectory(new File("target/prov-db"), new File("target/"+time+".zip/graph.db"))
+      FileUtils.moveFile(new File("target/"+fileName), new File("target/"+time+".zip/"+fileName))
+      ZipUtil.unexplode(zip)
+      println("Zipping up files")
+      GraphFile(time+".zip")
+    }
+    else
+    {
+      val db: File = new File("target/prov-db")
+      FileUtils.deleteDirectory(db)
+      //Return the name of the file
+      GraphFile(fileName)
+    }
   }
 
   get("/graphs/:name") {
     val fileName: String = params("name")
     val file: File = new File("target/"+fileName)
-    if (file.exists) {
+    if (file.exists && file.getName.endsWith(".provn")) {
       //TODO: Investigate making this a websocket connection.
       //Return prov-n File
       contentType = "text/provenance-notation"
       response.setHeader("Content-Disposition", "attachment; filename=" + file.getName)
       fromFile(file).getLines mkString "\n"
+    }
+    else if (file.exists && file.getName.endsWith("zip"))
+    {
+      contentType = "application/zip"
+      response.setHeader("Content-Disposition", "attachment; filename=" + file.getName)
+      file
     }
     else
     {
@@ -92,7 +126,7 @@ class ConstraintController extends Controller {
     val fileName: String = params("name")
     val file: File = new File("target/"+fileName)
     if (file.exists) {
-      file.delete()
+      //file.delete()
     }
   }
 

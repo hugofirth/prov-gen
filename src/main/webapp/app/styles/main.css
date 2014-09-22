@@ -82,3 +82,12 @@ button#generateButton {
         border-bottom: 0;
     }
 }
+
+/* Customise Demo Form */
+#generationForm-error {
+    margin-top: 1em;
+}
+
+#includeDB {
+    margin-top: 1em;
+}

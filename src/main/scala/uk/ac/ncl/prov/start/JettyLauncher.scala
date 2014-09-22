@@ -45,7 +45,6 @@ object JettyLauncher {
     context.setResourceBase(resources+"/app")
     context.setInitParameter(ScalatraListener.LifeCycleKey, "uk.ac.ncl.prov.start.Bootstrap")
     context.addEventListener(new ScalatraListener)
-//    context.addServlet(classOf[uk.ac.ncl.prov.controller.ConstraintController], "/api/v1/*")
 
     server.setHandler(context)
 

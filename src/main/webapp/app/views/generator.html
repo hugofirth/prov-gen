@@ -1,29 +1,59 @@
 <div class="jumbotron">
-    <form novalidate>
+    <form  name="generationForm" novalidate>
         <div class="row">
             <div class="form-group">
-                <label for="seedGraphInput" class="control-label">Seed Graph</label>
-                <textarea name="seedGraphInput" class="form-control" id="seedGraphInput" rows="10" data-ng-model="generator.seed"></textarea>
+                <label for="examplesDropdown" class="control-label">Examples [<a href="#">?</a>]</label>
+                <select name="examplesDropdown" id="examplesDropdown" class="form-control"
+                        data-ng-model="selectedExample" data-ng-options="example.description for example in examples"
+                        data-ng-change="selectExample()">
+                    <option value="" selected="selected">Custom</option>
+                </select>
             </div>
         </div>
         <div class="row">
-            <div class="form-group">
-                <label for="constraintRulesInput" class="control-label">Constraint Rules</label>
-                <textarea name="constraintRulesInput" class="form-control" id="constraintRulesInput" rows="10" data-ng-model="generator.constraints"></textarea>
+            <div class="form-group" data-ng-class="{'has-error': generationForm.seedGraphInput.$invalid}">
+                <label for="seedGraphInput" class="control-label">Seed Graph [<a href="https://github.com/hugofirth/prov-gen/wiki/Seed">?</a>]</label>
+                <textarea name="seedGraphInput" class="form-control" id="seedGraphInput" rows="10" data-ng-model="generator.seed" required></textarea>
             </div>
         </div>
         <div class="row">
-            <label class="control-label" for="executionParameterInputs">Execution Parameters</label>
+            <div class="form-group" data-ng-class="{'has-error': generationForm.constraintRulesInput.$invalid}">
+                <label for="constraintRulesInput" class="control-label">Constraint Rules [<a href="https://github.com/hugofirth/prov-gen/wiki/Constraint-DSL">?</a>]</label>
+                <textarea name="constraintRulesInput" class="form-control" id="constraintRulesInput" rows="10" data-ng-model="generator.constraints" required></textarea>
+            </div>
+        </div>
+        <div class="row" data-ng-class="{'has-error': generationForm.constraintRulesInput.$invalid}">
+            <label class="control-label" for="executionParameterInputs">Execution Parameters [<a href="#">?</a>]</label>
             <fieldset class="form-inline" id="executionParameterInputs">
-                <input type="number" class="form-control" data-ng-model="generator.executionParams.size" placeholder="Size"/>
-                <input type="number" class="form-control" data-ng-model="generator.executionParams.order" placeholder="Order"/>
-                <input type="number" class="form-control" data-ng-model="generator.executionParams.numGraphs" placeholder="Num Graphs"/>
+                <input name="executionParamsSize" id="executionParamsSize" type="number" class="form-control" data-ng-model="generator.executionParams.size" min="0" max="100000" placeholder="Num Edges" required/>
+                <input name="executionParamsOrder" id="executionParamsOrder" type="number" class="form-control" data-ng-model="generator.executionParams.order" min="0" max="100000" placeholder="Num Vertices" required/>
+                <input name="executionParamsNumGraphs" id="executionParamsNumGraphs" type="number" class="form-control" data-ng-model="generator.executionParams.numGraphs" min="0" max="1000" placeholder="Num Graphs" required/>
             </fieldset>
         </div>
+        <div class="row alert alert-danger text-left" id="generationForm-error" ng-show="generationForm.$invalid">
 
+            <h3>Oh dear! There appear to be some problems...</h3>
+
+            <p>Please resolve the following problems before continuing:</p>
+            <ul>
+                <li ng-show="generationForm.seedGraphInput.$error.required" >A seed graph is required!</li>
+                <li ng-show="generationForm.constraintRulesInput.$error.required" >Constraint rules are required!</li>
+                <li ng-show="generationForm.executionParamsSize.$error.required || generationForm.executionParamsSize.$error.min || generationForm.executionParamsSize.$error.max" >You must specify a number of edges between 0 & 100,000!</li>
+                <li ng-show="generationForm.executionParamsOrder.$error.required || generationForm.executionParamsOrder.$error.min || generationForm.executionParamsOrder.$error.max" >You must specify a number of vertices between 0 & 100,000!</li>
+                <li ng-show="generationForm.executionParamsNumGraphs.$error.required || generationForm.executionParamsNumGraphs.$error.min || generationForm.executionParamsNumGraphs.$error.max" >You must specify a number of graphs between 0 & 1000!</li>
+            </ul>
+
+        </div>
+        <div class="row">
+            <div class="checkbox-inline" id="includeDB">
+                <label>
+                    <input name="includeDB" type="checkbox" data-ng-model="generator.includeDB"/> Include Neo4J database dump?
+                </label>
+            </div>
+        </div>
         <div class="row">
             <div class="form-group">
-                <p><button type="submit" id="generateButton" class="btn btn-lg btn-success" data-ng-click="getGeneratedFile()"><span data-us-spinner data-spinner-key="spinner-1"></span> Generate</button></p>
+                <p><button type="submit" id="generateButton" class="btn btn-lg btn-success" data-ng-disabled="generationForm.$invalid" data-ng-click="getGeneratedFile()"><span data-us-spinner data-spinner-key="spinner-1"></span> Generate</button></p>
             </div>
         </div>
     </form>
