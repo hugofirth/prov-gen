@@ -25,8 +25,8 @@
         <div class="row" data-ng-class="{'has-error': generationForm.constraintRulesInput.$invalid}">
             <label class="control-label" for="executionParameterInputs">Execution Parameters [<a href="#">?</a>]</label>
             <fieldset class="form-inline" id="executionParameterInputs">
-                <input name="executionParamsSize" id="executionParamsSize" type="number" class="form-control" data-ng-model="generator.executionParams.size" min="0" max="100000" placeholder="Num Edges" required/>
-                <input name="executionParamsOrder" id="executionParamsOrder" type="number" class="form-control" data-ng-model="generator.executionParams.order" min="0" max="100000" placeholder="Num Vertices" required/>
+                <input name="executionParamsSize" id="executionParamsSize" type="number" class="form-control" data-ng-model="generator.executionParams.size" min="1" max="10000000" placeholder="Num Edges" required/>
+                <input name="executionParamsOrder" id="executionParamsOrder" type="number" class="form-control" data-ng-model="generator.executionParams.order" min="1" max="10000000" placeholder="Num Vertices" required/>
                 <input name="executionParamsNumGraphs" id="executionParamsNumGraphs" type="number" class="form-control" data-ng-model="generator.executionParams.numGraphs" min="0" max="1000" placeholder="Num Graphs" required/>
             </fieldset>
         </div>
@@ -38,8 +38,8 @@
             <ul>
                 <li ng-show="generationForm.seedGraphInput.$error.required" >A seed graph is required!</li>
                 <li ng-show="generationForm.constraintRulesInput.$error.required" >Constraint rules are required!</li>
-                <li ng-show="generationForm.executionParamsSize.$error.required || generationForm.executionParamsSize.$error.min || generationForm.executionParamsSize.$error.max" >You must specify a number of edges between 0 & 100,000!</li>
-                <li ng-show="generationForm.executionParamsOrder.$error.required || generationForm.executionParamsOrder.$error.min || generationForm.executionParamsOrder.$error.max" >You must specify a number of vertices between 0 & 100,000!</li>
+                <li ng-show="generationForm.executionParamsSize.$error.required || generationForm.executionParamsSize.$error.min || generationForm.executionParamsSize.$error.max" >You must specify a number of edges between 1 & 10,000,000!</li>
+                <li ng-show="generationForm.executionParamsOrder.$error.required || generationForm.executionParamsOrder.$error.min || generationForm.executionParamsOrder.$error.max" >You must specify a number of vertices between 1 & 10,000,000!</li>
                 <li ng-show="generationForm.executionParamsNumGraphs.$error.required || generationForm.executionParamsNumGraphs.$error.min || generationForm.executionParamsNumGraphs.$error.max" >You must specify a number of graphs between 0 & 1000!</li>
             </ul>
 
